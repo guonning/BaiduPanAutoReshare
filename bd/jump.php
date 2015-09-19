@@ -75,7 +75,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			$suffix = '';
 			if (strrpos($path, '.') !== false)
 				$suffix = substr($path, strrpos($path, '.'));
-			$newname = '[GalACG]EX' . str_pad((time() - 1402761600),9,'0',STR_PAD_LEFT) . $suffix;
+			$newname = generateNewName() . $suffix;
 			$newfullpath=substr($path,0,1-strlen(strrchr($path,'/'))).$newname;
 			$need_rename = true;
 			if ($res['usermd5'] && !$md5['info'][0]['isdir']) {

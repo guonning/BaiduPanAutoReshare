@@ -57,7 +57,7 @@ foreach($filelist as &$v) {
 			$check_result='<td><font color="green">自动补档保护中</font></td>';
 		}
 		$_SESSION['filecheck'][$v['fid']]=false;
-		$check_result.='<td><a href="http://budang.galacg.me/jump.php?'.$_SESSION['list'][$v['fid']]['id'].'" target="_blank">http://budang.galacg.me/jump.php?'.$_SESSION['list'][$v['fid']]['id'].'</a></td><td><a href="http://pan.baidu.com'.$_SESSION['list'][$v['fid']]['link'].'">http://pan.baidu.com'.$_SESSION['list'][$v['fid']]['link'].'</a></td>';
+		$check_result.='<td><a href="'. $jumper.$_SESSION['list'][$v['fid']]['id'].'" target="_blank">'. $jumper.$_SESSION['list'][$v['fid']]['id'].'</a></td><td><a href="http://pan.baidu.com'.$_SESSION['list'][$v['fid']]['link'].'">http://pan.baidu.com'.$_SESSION['list'][$v['fid']]['link'].'</a></td>';
 		unset($_SESSION['list'][$v['fid']],$_SESSION['list_filenames'][$v['fid']]);
 	} else {
 		if(array_find($v['name'].'/',$_SESSION['list_filenames'])!==false) {

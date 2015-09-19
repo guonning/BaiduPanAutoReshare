@@ -61,12 +61,12 @@ if(isset($_POST['submit'])) {
 							echo '<font color="red"><b>因为没有设置MD5，无法启用换MD5补档模式。</b>请在“浏览文件”模式添加一个小文件（几字节即可），并在添加时输入提取码为“md5”。<b>不能设置补档md5的问题已修复</b></font><br />';
 						$check_file=$mysql->query("select * from watchlist where fid='{$fileinfo['file_list']['list'][0]['fs_id']}'")->fetch();
 						if(!empty($check_file)) {
-							echo '<h1>错误：此文件已添加过，地址是：<a href="http://budang.galacg.me/jump.php?'.$check_file[0].'" target="_blank">http://budang.galacg.me/jump.php?'.$check_file[0].'</a></h1>';
+							echo '<h1>错误：此文件已添加过，地址是：<a href="'. $jumper.$check_file[0].'" target="_blank">'. $jumper.$check_file[0].'</a></h1>';
 						} else {
 							$mysql->prepare('insert into watchlist values(null,?,?,?,0,?,?,0)')->execute(array($fileinfo['file_list']['list'][0]['fs_id'],$fileinfo['file_list']['list'][0]['path'],$_POST['link'],$_POST['code'],$check_user['ID'],));
 							$id=$mysql->lastInsertId();
-							wlog('添加链接记录：用户名：'.$fileinfo['linkusername'].'，文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'，文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'，文件访问地址为：http://budang.galacg.me/jump.php?'.$id);
-							echo '<h1>添加成功！<br />用户名：'.$fileinfo['linkusername'].'<br />文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'<br />文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'<br />文件访问地址为：<a href="http://budang.galacg.me/jump.php?'.$id.'" target="_blank">http://budang.galacg.me/jump.php?'.$id.'</a></h1>';
+							wlog('添加链接记录：用户名：'.$fileinfo['linkusername'].'，文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'，文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'，文件访问地址为：'. $jumper.$id);
+							echo '<h1>添加成功！<br />用户名：'.$fileinfo['linkusername'].'<br />文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'<br />文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'<br />文件访问地址为：<a href="'. $jumper.$id.'" target="_blank">'. $jumper.$id.'</a></h1>';
 						}
 					}
 				}

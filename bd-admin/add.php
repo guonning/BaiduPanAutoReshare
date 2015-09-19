@@ -57,8 +57,8 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 		if($_POST['link']) {
 			$mysql->prepare('insert into watchlist values(null,?,?,?,0,?,?,0)')->execute(array($_POST['fid'],$_POST['filename'],$_POST['link'],$_POST['code'],$_SESSION['user_id']));
 			$id=$mysql->lastInsertId();
-			wlog('在文件浏览页添加记录：用户名：'.$_SESSION['username'].'，文件完整路径：'.$_POST['filename'].'，文件fs_id：'.$_POST['fid'].'，文件访问地址为：http://budang.galacg.me/jump.php?'.$id);
-			echo '<h1>添加成功！文件访问地址为：<a href="http://budang.galacg.me/jump.php?'.$id.'" target="_blank">http://budang.galacg.me/jump.php?'.$id.'</a><br />';
+			wlog('在文件浏览页添加记录：用户名：'.$_SESSION['username'].'，文件完整路径：'.$_POST['filename'].'，文件fs_id：'.$_POST['fid'].'，文件访问地址为：'. $jumper.$id);
+			echo '<h1>添加成功！文件访问地址为：<a href="'. $jumper.$id.'" target="_blank">'. $jumper.$id.'</a><br />';
 			echo '<a href="browse.php">返回</a></h1>';
 			die();
 		}

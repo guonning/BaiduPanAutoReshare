@@ -8,12 +8,20 @@ $db='budang';
 //要模仿的浏览器
 $ua='netdisk;4.6.1.0;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia';
 
-//自动开始下载相关的设置，如果都设置为false可以禁用此功能
+//跳转地址
+$jumper = 'http://localhost/jump.php?';
+
+//直接获取链接功能相关的设置，如果都设置为false可以禁用此功能
+//本项指定跳转页所在地址是不是HTTPS
 $is_https = false;
-//如果服务器不是HTTPS，那么需要一个HTTPS跳转页来屏蔽引用页，否则百度返回403
-//如果你有不需要HTTPS就能屏蔽的方法请务必告诉我
+//如果跳转页不是HTTPS，那么需要一个HTTPS跳转页来屏蔽引用页，否则百度返回403
+//如果你有不需要HTTPS就能屏蔽引用页的方法请务必告诉我
 $https_redirecter = 'http://anonym.to/?';
 
+//生成新文件名，不含扩展名
+function generateNewName() {
+	return '[GalACG]EX' . str_pad((time() - 1402761600),9,'0',STR_PAD_LEFT);
+}
 
 function wlog($message, $level = 0) {
 	global $mysql;
