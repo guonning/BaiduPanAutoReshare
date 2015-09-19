@@ -12,7 +12,7 @@ $ua='netdisk;4.6.1.0;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia';
 $is_https = false;
 //如果服务器不是HTTPS，那么需要一个HTTPS跳转页来屏蔽引用页，否则百度返回403
 //如果你有不需要HTTPS就能屏蔽的方法请务必告诉我
-$https_redirecter = 'https://anonym.to/?';
+$https_redirecter = 'http://anonym.to/?';
 
 
 function wlog($message, $level = 0) {

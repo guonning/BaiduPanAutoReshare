@@ -2,9 +2,11 @@
 
 by 虹原翼
 
-(I'll be glas if you can help me translate README.md into English)
+### 当前[绅士仓库](http://galacg.me/)正在使用这款自动补档程序。
 
-# 功能：
+(I'll be glad if you can help me translate README.md into English)
+
+## 功能：
 
 - 免提取，免分享，直接获取百度网盘文件的下载地址（新功能）
 
