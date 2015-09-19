@@ -67,7 +67,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。
 				<script>window.onload=function(){window.location="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '"};</script>';
 		} elseif(!$check['user_valid']) {
-			echo '<h1>用户登录失效，请到腾讯微博通知@Yazawa_Niko处理！</h1>';
+			echo '<h1>用户登录失效</h1>';
 			wlog('记录ID '.$_SERVER['QUERY_STRING'].'在补档时登录信息失效', 2);
 			die();
 		} elseif(!$check['valid']) {
@@ -113,7 +113,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 				));
 
 				if (isset($json -> errno) && $json -> errno !== 0) {
-					echo '<h1>补档娘更名失败, 请到腾讯微博通知@Yazawa_Niko处理！错误代码：'.$json -> errno.'</h1>';
+					echo '<h1>补档娘更名失败错误代码：'.$json -> errno.'</h1>';
 					wlog('记录ID '.$_SERVER['QUERY_STRING'].'重命名失败', 2);
 					$mysql->exec('update watchlist set failed=1 where id='.$_SERVER['QUERY_STRING']);
 					die();
@@ -122,12 +122,12 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			}
 			$result=createShare($res['fid'],$res['pass'],$token,$res['cookie']);
 			if (!$result) {
-				echo '<h1>补档娘分享失败, 请到腾讯微博通知@Yazawa_Niko处理！</h1>';
+				echo '<h1>补档娘分享失败</h1>';
 				wlog('记录ID '.$_SERVER['QUERY_STRING'].'补档失败：分享失败', 2);
 				$mysql->exec('update watchlist set failed=1 where id='.$_SERVER['QUERY_STRING']);
 				die();
 			}
-			echo '<script>alert("您访问的文件已经失效，但是我们进行了自动补档，提取码不变。\n若跳转后文件仍然失效，请到腾讯微博联系 @Yazawa_Niko 处理。\n本文件已自动补档'
+			echo '<script>alert("您访问的文件已经失效，但是我们进行了自动补档，提取码不变。\n本文件已自动补档'
 					. ($res['count'] + 1)
 					. '次，本次补档方式：'.(($need_rename)?'重命名':'更换MD5').'补档");window.location="'
 					. $result .(($res['pass']!=='0')? ('#' . $res['pass']) :''). '";</script>';
