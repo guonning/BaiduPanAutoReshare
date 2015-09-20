@@ -218,7 +218,7 @@ function check_share($id, $link, $name, $cookie) {
 		$ret['valid']=false;
 	} else {
 		$url='http://pan.baidu.com'.$link;
-		$check=request($url,$ua,cookie);
+		$check=request($url,$ua,$cookie);
 		if(strpos($check['body'],'你所访问的页面不存在了。')) {
 			$ret['conn_valid']=false;
 		}else if(strpos($check['body'],'涉及侵权、色情、反动、低俗')===false && strpos($check['body'],'分享的文件已经被')===false && $link) {
