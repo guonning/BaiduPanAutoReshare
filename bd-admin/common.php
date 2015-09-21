@@ -11,12 +11,8 @@ $ua='netdisk;4.6.1.0;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia';
 //跳转地址
 $jumper = 'http://localhost/jump.php?';
 
-//直接获取链接功能相关的设置，如果都设置为false可以禁用此功能
-//本项指定跳转页所在地址是不是HTTPS
-$is_https = false;
-//如果跳转页不是HTTPS，那么需要一个HTTPS跳转页来屏蔽引用页，否则百度返回403
-//如果你有不需要HTTPS就能屏蔽引用页的方法请务必告诉我
-$https_redirecter = 'http://anonym.to/?';
+//直接获取链接功能相关的设置
+$enable_direct_link = true;
 
 //生成新文件名，不含扩展名
 function generateNewName() {

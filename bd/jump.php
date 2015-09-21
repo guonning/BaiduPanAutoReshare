@@ -36,24 +36,17 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	if ($md5 === false) {
 		echo '<h1>文件不存在QuQ</h1>';
 		die();
-	} else if (!isset($_GET['nodirectdownload']) && ($is_https || $https_redirecter)) {
+	} else if ($enable_direct_link && !isset($_GET['nodirectdownload'])) {
 		if (isset($md5['info'][0]['dlink'])) {
 			echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br /><br />';
-			echo '下载链接已为您准备好，点击或将其复制到下载工具中开始下载。若一个链接不走，请多试几个。';
+			echo '下载链接已为您准备好，点击或将其复制到下载工具中开始下载。若一个链接不走，请多试几个。<br /><b>若您遇到403错误，复制链接粘贴到地址栏打开即可解决。</b>Chrome浏览器点击下面的链接不会出现403错误，但IE浏览器会出现。';
 			$link = getDownloadLink($res['name'], $token, $res['cookie']);
 			$link[] = $md5['info'][0]['dlink'];
 			foreach ($link as $k => $v) {
 				if ($k == count($link) - 1) {
 					echo '<br />最后一个链接会随机重定向到不同的服务器，但是此链接封杀下载工具的几率也最高。';
 				}
-				echo '<br /><a target="_blank" href="';
-				//隐藏referrer
-				if (!$is_https) {
-					echo $https_redirecter . $v;
-				} else {
-					echo $v;
-				}
-				echo '">' . $v . '</a><br />';
+				echo '<br /><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a><br />';
 			}
 			die();
 		}
