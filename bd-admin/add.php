@@ -68,7 +68,7 @@ $test=$mysql->prepare('select * from watchlist where fid=? and name=? and user_i
 $test->execute(array($_POST['fid'],$_POST['filename'],$_SESSION['user_id']));
 $test=$test->fetch();
 if(!empty($test)) {
-	echo "<p>这个文件已经添加过啦！<br />文件名：{$test[2]}<br />访问地址：<a href=\"http://budang.galacg.me/jump.php?".$test[0]."\" target=\"_blank\">http://budang.galacg.me/jump.php?".$test[0]."</a><br />分享地址：<a href=\"http://pan.baidu.com{$test[3]}\"  target=\"_blank\">http://pan.baidu.com{$test[3]}</a><br />提取码：{$test[5]}<br />补档次数：{$test['count']}<br />百度用户名：{$_SESSION['username']}<br /><a href=\"browse.php\">返回</a></p></body></html>";
+	echo "<p>这个文件已经添加过啦！<br />文件名：{$test[2]}<br />访问地址：<a href=\"$jumper".$test[0]."\" target=\"_blank\">$jumper".$test[0]."</a><br />分享地址：<a href=\"http://pan.baidu.com{$test[3]}\"  target=\"_blank\">http://pan.baidu.com{$test[3]}</a><br />提取码：{$test[5]}<br />补档次数：{$test['count']}<br />百度用户名：{$_SESSION['username']}<br /><a href=\"browse.php\">返回</a></p></body></html>";
 	die();
 }
 

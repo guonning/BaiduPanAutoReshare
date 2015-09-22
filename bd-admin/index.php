@@ -55,7 +55,7 @@ try {
 		} else {
 			echo '<font color="green">自动补档保护中</font>';
 		}
-		echo "</td><td>{$v[0]}</td><td>{$v[1]}</td><td id=\"PATH{$v[0]}\">{$v[2]}</td><td><a href=\"http://budang.galacg.me/jump.php?{$v[0]}\"  target=\"_blank\">http://budang.galacg.me/jump.php?{$v[0]}</a></td><td>{$v[5]}</td><td>{$v['username']}</td><td>{$v[4]}</td><td><a href=\"javascript:;\" onclick=\"dlt({$v[0]});\">删除</a></td></tr>";
+		echo "</td><td>{$v[0]}</td><td>{$v[1]}</td><td id=\"PATH{$v[0]}\">{$v[2]}</td><td><a href=\"$jumper{$v[0]}\"  target=\"_blank\">$jumper{$v[0]}</a></td><td>{$v[5]}</td><td>{$v['username']}</td><td>{$v[4]}</td><td><a href=\"javascript:;\" onclick=\"dlt({$v[0]});\">删除</a></td></tr>";
 		$id[]=$v[0];
 	}
 	echo '</table>';
