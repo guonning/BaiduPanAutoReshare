@@ -22,7 +22,7 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 	$test=$mysql->prepare('select * from watchlist where fid=? and name=? and user_id=?');
 	$test->execute(array($_POST['fid'],$_POST['filename'],$_SESSION['user_id']));
 	$test=$test->fetch();
-	if($_POST['code']=='') $_POST['code']=0;
+	if($_POST['code']=='') $_POST['code']='0';
 	if(!empty($test))
 		echo "<h1>上次提交已经成功，请勿重复提交。</h1>";
 	elseif(strtolower($_POST['code'])!=='md5' && $_POST['code']!=='0' && strlen($_POST['code'])!=4)
