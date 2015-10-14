@@ -6,9 +6,9 @@
 	<title>韩度网盘自动补档程序</title>
 </head>
 <body>
-	<h1>韩度网盘自动补档程序</h1>
+	<h1>百度网盘卫士</h1>
 	<p>by 虹原翼</p>
-	<p>9月19日升级版</p>
+	<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">本程序已在GitHub上开源</a></p>
 <?php
 include_once '../bd-admin/common.php';
 if (isset($_SERVER['QUERY_STRING']) && strpos($_SERVER['QUERY_STRING'], '&') !== false) {
@@ -36,9 +36,13 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	if ($md5 === false) {
 		echo '<h1>文件不存在QuQ</h1>';
 		die();
-	} else if ($enable_direct_link && !isset($_GET['nodirectdownload'])) {
+	} else if ($enable_direct_link && (!isset($_GET['nodirectdownload']) || $res['link'] == '/s/notallow')) {
 		if (isset($md5['info'][0]['dlink'])) {
-			echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br /><br />';
+			if ($res['link'] !== '/s/notallow') {
+				echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br /><br />';
+			} else {
+				echo '本文件只允许直链下载。<br /><br /><br />';
+			}
 			echo '下载链接已为您准备好，点击或将其复制到下载工具中开始下载。若一个链接不走，请多试几个。<br /><b>若您遇到403错误，复制链接粘贴到地址栏打开即可解决。</b>Chrome浏览器点击下面的链接不会出现403错误，但IE浏览器会出现。';
 			$link = getDownloadLink($res['name'], $token, $res['cookie']);
 			$link[] = $md5['info'][0]['dlink'];

@@ -1,4 +1,4 @@
-<?php ini_set('display_errors','On');require 'common.php';
+<?php require 'common.php';
 try {
 	$mysql=new PDO("mysql:host=$host;dbname=$db",$user,$pass);
 }catch(PDOException $e) {
@@ -58,7 +58,7 @@ if(isset($_POST['submit'])) {
 						echo '<h1>错误：该分享有多个文件。当前暂未支持多文件补档……</h1>';
 					} else {
 						 if($check_user['md5']=='')
-							echo '<font color="red"><b>因为没有设置MD5，无法启用换MD5补档模式。</b>请在“浏览文件”模式添加一个小文件（几字节即可），并在添加时输入提取码为“md5”。<b>不能设置补档md5的问题已修复</b></font><br />';
+							echo '<font color="red"><b>因为没有设置MD5，无法启用换MD5补档模式。</b>请在“浏览文件”模式添加一个小文件（几字节即可），并在添加时输入提取码为“md5”。</font><br />';
 						$check_file=$mysql->query("select * from watchlist where fid='{$fileinfo['file_list']['list'][0]['fs_id']}'")->fetch();
 						if(!empty($check_file)) {
 							echo '<h1>错误：此文件已添加过，地址是：<a href="'. $jumper.$check_file[0].'" target="_blank">'. $jumper.$check_file[0].'</a></h1>';

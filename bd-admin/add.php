@@ -22,13 +22,13 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 	$test=$mysql->prepare('select * from watchlist where fid=? and name=? and user_id=?');
 	$test->execute(array($_POST['fid'],$_POST['filename'],$_SESSION['user_id']));
 	$test=$test->fetch();
+	$md5=getFileMeta($_POST['filename'],$_SESSION['bds_token'],$_SESSION['cookie']);
 	if($_POST['code']=='') $_POST['code']='0';
 	if(!empty($test))
 		echo "<h1>上次提交已经成功，请勿重复提交。</h1>";
 	elseif(strtolower($_POST['code'])!=='md5' && $_POST['code']!=='0' && strlen($_POST['code'])!=4)
 		echo '<h1>错误：提取码位数不对。请输入4个半角字符，或者1个全角字符和1个半角字符的组合。</h1>';
 	elseif(strtolower($_POST['code'])=='md5') {
-		$md5=getFileMeta($_POST['filename'],$_SESSION['bds_token'],$_SESSION['cookie']);
 		if ($md5 === false)
 			echo '<h1>设置补档MD5：出现未知错误，找不到这个文件，请在添加文件列表里重新进入！<a href="browse.php">返回</a></h1>';
 		elseif ($md5['info'][0]['isdir'])
@@ -42,9 +42,13 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 			die();
 		}
 	} else {
-		if(isset($_POST['no_share']))
-			$_POST['link']='/s/fakelink';
-		elseif($_POST['link']=='')
+		if(!$md5['info'][0]['isdir'] && isset($_POST['no_share']) && $_POST['no_share'] > 0) {
+			if ($enable_direct_link && $_POST['no_share'] == '2') {
+				$_POST['link']='/s/notallow';
+			} else {
+				$_POST['link']='/s/fakelink';
+			}
+		} elseif($_POST['link']=='')
 			$_POST['link']=substr(createShare($_POST['fid'],$_POST['code'],$_SESSION['bds_token'],$_SESSION['cookie'],'browse.php'),20);
 		elseif(substr($_POST['link'],0,20)=='http://pan.baidu.com')
 			$_POST['link']=substr($_POST['link'],20);
@@ -78,8 +82,14 @@ echo "<h2>您将添加文件：{$_POST['filename']}（fs_id：{$_POST['fid']}）
 <input type="hidden" name="fid" value="<?php echo $_POST['fid'] ?>" />
 <input type="hidden" name="filename" value="<?php echo $_POST['filename'] ?>" />
 已建好的分享链接（若未分享请留空）：<input type="text" name="link" /><br />
-提取码（4位，公开分享请留空，用作连接补档请输入"md5"）：<input type="text" name="code" /><br />
-<input type="checkbox" name="no_share" value="1" />不创建分享<br />现在点击跳转链接，会<b>免提取(也免分享)自动下载文件，人工提取/自动补档只作为备用手段</b>，所以没有必要创建分享。不过注意<b>文件夹还是需要提取的</b>。<br /><br />
+提取码（4位，公开分享请留空，用作连接补档请输入"md5"）：<input type="text" name="code" /><br /><br />
+分享选项（如果添加的是文件夹，本项会被无视）：<br />
+<input type="radio" name="no_share" value="0" checked="checked" />照常创建分享<br />
+<input type="radio" name="no_share" value="1" />第一次访问时创建分享（需要测试文件是否能更换MD5时可选择此项）<br />
+<?php if ($enable_direct_link) { ?>
+<input type="radio" name="no_share" value="2" />不建立分享，只允许直链下载，禁止前往提取页（文件夹会无视此项）<br />
+<?php } ?>
+<br />
 现在换MD5补档模式为全局启用状态，所有文件强制换MD5补档。请不要添加txt等在结尾连接内容后影响使用的格式！<br />
 <?php if($_SESSION['md5']=='')
 	 echo '因为没有设置MD5，无法启用换MD5补档模式。请添加一个小文件（几字节即可）并在添加时输入提取码为“md5”。<br />'; ?>
