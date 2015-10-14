@@ -3,10 +3,10 @@
 <head>
 	<style>body{font-family:'Microsoft YaHei UI','Microsoft JHengHei UI',sans-serif}</style>
 	<meta charset="UTF-8">
-	<title>韩度网盘自动补档程序</title>
+	<title>度娘盘分享守护程序</title>
 </head>
 <body>
-	<h1>百度网盘卫士</h1>
+	<h1>度娘盘分享守护程序</h1>
 	<p>by 虹原翼</p>
 	<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">本程序已在GitHub上开源</a></p>
 <?php
@@ -142,10 +142,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 <head>
 	<style>body{font-family:'Microsoft YaHei UI','Microsoft JHengHei UI',sans-serif}</style>
 	<meta charset="UTF-8">
-	<title>韩度网盘自动补档程序</title>
+	<title>度娘盘分享守护程序</title>
 </head>
 <body>
-	<h1>韩度网盘自动补档程序</h1>
+	<h1>度娘盘分享守护程序</h1>
 	<p>by 虹原翼</p>
 	<p>9月19日升级：支持更换除8秒视频外任何文件的MD5</p>
 	<h2>未指定要提取的文件！</h2>
