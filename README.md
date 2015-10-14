@@ -10,7 +10,7 @@ by 虹原翼
 
 ## 功能：
 
-- 免提取，免分享，直接获取百度网盘文件的下载地址（新功能）
+- 免提取，免分享，直接获取百度网盘文件的下载地址
 
 - 监视百度网盘中建立的分享，通过跳转链接访问时，若分享被爆，全自动补档，提取码不变
 
@@ -22,13 +22,13 @@ by 虹原翼
 
 - 导入install.sql
 
-- 修改bd-admin/common.php，指定数据库，修改$jumper指向jump.php所在地址。如有需要，可按说明修改其他选项
+- 修改config.sample.php，指定数据库，修改$jumper指向jump.php所在地址。如有需要，可按说明修改其他选项
 
-- 将bd-admin/common.php复制到bd文件夹，修改bd/jump.php里的include语句使其指向复制的common.php
+- 将config.sample.php分别复制到bd和bd-admin文件夹，文件名改为config.php
 
 - 将bd和bd-admin文件夹绑定不同的网站，为后者加上HTTP身份验证（因为我们没有做后台登录）
 
-- 如果使用PHP5.3，关闭safe mode
+- 关闭open_basedir，如果使用PHP5.3，关闭safe mode
 
 ## 使用方法
 

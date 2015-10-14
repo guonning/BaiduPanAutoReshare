@@ -10,7 +10,8 @@
 	<p>by 虹原翼</p>
 	<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">本程序已在GitHub上开源</a></p>
 <?php
-include_once '../bd-admin/common.php';
+include_once('common.php');
+
 if (isset($_SERVER['QUERY_STRING']) && strpos($_SERVER['QUERY_STRING'], '&') !== false) {
 	$_SERVER['QUERY_STRING'] = substr($_SERVER['QUERY_STRING'], 0, strpos($_SERVER['QUERY_STRING'], '&'));
 }

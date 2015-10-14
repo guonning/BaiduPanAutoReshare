@@ -76,23 +76,6 @@ function array_find($needle, $haystack,$reverse=false)
    return false;
 }
 
-function alert_error($error,$return) {
-	echo "<script>alert('$error');window.location.href='$return';</script></body></html>";
-	die();
-}
-
-$head=false;
-function print_header($title) { ?>
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta charset="utf-8" />
-<title><?php echo $title; ?></title>
-</head>
-<body>
-<?php global $head;
-	$head=true;
-}
 
 function getBaiduToken($cookie,$username) {
 	global $ua;
@@ -102,25 +85,6 @@ function getBaiduToken($cookie,$username) {
 		alert_error('cookie失效，或者百度封了IP！','switch_user.php?name='.$username);
 	}
 	return $bdstoken;
-}
-
-function getBaiduFileList($folder,$token,$cookie) {
-	global $ua;
-	$list=array();
-	$page=1;
-	$size=-1;
-	while($size) {
-		$ret=request("http://pan.baidu.com/api/list?channel=chunlei&clienttype=0&web=1&num=1000&page=$page&dir=$folder&order=time&desc=1&showempty=0&bdstoken=$token&channel=chunlei&clienttype=0&web=1&app_id=250528",$ua,$cookie);
-		$ret=json_decode($ret['body'],true);
-		if(!isset($ret['list']))
-			return array();
-		$size=count($ret['list']);
-		$page++;
-		foreach($ret['list'] as $k=>$v) {
-			$list[]=array('fid'=>number_format($v['fs_id'],0,'',''),'name'=>$v['path'],'isdir'=>$v['isdir']);
-		}
-	}
-	return $list;
 }
 
 function createShare($fid,$code,$token,$cookie,$return=false) {
@@ -144,46 +108,38 @@ function createShare($fid,$code,$token,$cookie,$return=false) {
 	return $ret->shorturl;
 }
 
-function refresh_watchlist() {
-	global $mysql;
-	if(isset($_SESSION['list'])) unset($_SESSION['list']);
-	if(isset($_SESSION['list_filenames'])) unset($_SESSION['list_filenames']);
-	$list=$mysql->query('select watchlist.* from watchlist left join users on watchlist.user_id=users.ID where watchlist.user_id='.$_SESSION['user_id'])->fetchAll();
-	foreach($list as $k=>$v) {
-		$_SESSION['list'][$v[1]]=array('id'=>$v[0],'filename'=>$v[2],'link'=>$v[3]);
-		$_SESSION['list_filenames'][$v[1]]=$v[2];
-	}
-}
-
-function set_cookie($cookie,$set_cookie) {
-	return implode('; ',array_merge(explode('; ',$cookie),explode('; ',$set_cookie)));
-}
-
-//百度贴吧客户端登录
-function baidu_login($username,$password,$codestring='',$captcha='') {
+function check_share($id, $link, $name, $cookie) {
 	global $ua;
-	$rq=request('http://pan.baidu.com/');
-	$cookie=$rq['header']['set-cookie'];
-	$post=array('isphone'=>'0','passwd'=>base64_encode($password),'un'=>$username,'vcode'=>$captcha,'vcode_md5'=>$codestring,'from'=>'baidu_appstore','stErrorNums'=>'0','stMethod'=>'1','stMode'=>'1','stSize'=>mt_rand(50,2000),'stTime'=>mt_rand(50,500),'stTimesNum'=>'0','timestamp'=>(time()*1000),'_client_id'=>'wappc_138'.mt_rand(1000000000,9999999999).'_'.mt_rand(100,999),'_client_type'=>'1','_client_version'=>'6.0.1','_phone_imei'=>md5(mt_rand()),'cuid'=>strtoupper(md5(mt_rand())).'|'.substr(md5(mt_rand()),1),'model'=>'M1');
-	ksort($post);
-	$sign='';
-	foreach($post as $k=>$v) {
-		$sign.=$k.'='.$v;
-	}
-	$rq=request('http://c.tieba.baidu.com/c/s/login','BaiduTieba for Android 6.0.1',null,http_build_query($post).'&sign='.strtoupper(md5($sign.'tiebaclient!!!')));
-	$result=json_decode($rq['body']);
-	$ret['errno']=$result->error_code;
-	if($ret['errno']==0){
-		$ret['bduss']=substr($result->user->BDUSS,0,strpos($result->user->BDUSS,'|'));
-		$ret['cookie']=$cookie.';BDUSS='.$ret['bduss'];
-	}
-	else {
-		if(isset($result->anti->need_vcode)) {
-			$ret['code_string']=$result->anti->vcode_md5;
-			$ret['captcha']=$result->anti->vcode_pic_url;
+	if(!$link || $link  == '/s/fakelink') {
+		$url='';
+		$ret['conn_valid']=true;
+		$ret['user_valid']=true;
+		$ret['valid']=false;
+	} else {
+		$url='http://pan.baidu.com'.$link;
+		$check=request($url,$ua,$cookie);
+		if(strpos($check['body'],'你所访问的页面不存在了。')) {
+			$ret['conn_valid']=false;
+		}else if(strpos($check['body'],'涉及侵权、色情、反动、低俗')===false && strpos($check['body'],'分享的文件已经被')===false && $link) {
+			$ret['conn_valid']=true;
+			$ret['user_valid']=true;
+			$ret['valid']=true;
+			$context=json_decode(findBetween($check['body'],'var _context = ',';'),true);
+			$current_path=$context['file_list']['list'][0]['path'];
+			if($current_path!=$name && $context) { //自动修复错误的路径
+				$mysql->prepare('update watchlist set name=? where id=?')->execute(array($current_path,$id));
+				$name=$current_path;
+			}
+		}elseif(strpos($check['body'],'加密分享了文件')!==false) {
+			$ret['conn_valid']=true;
+			$ret['user_valid']=false;
+		} else {
+			$ret['conn_valid']=true;
+			$ret['user_valid']=true;
+			$ret['valid']=false;
 		}
-		$ret['message']=$result->error_msg;
 	}
+	$ret['url']=$url;
 	return $ret;
 }
 
@@ -197,4 +153,18 @@ function getFileMeta($file, $token, $cookie) {
 		return false;
 	}
 	return $ret;
+}
+
+function getDownloadLink($file, $token, $cookie) {
+	global $ua;
+	$ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$token&app_id=250528&path=".urlencode($file),$ua,$cookie);
+	$ret = json_decode($ret['body'], true);
+	if (isset($ret['errno'])) {
+		wlog('文件 '.$file.' 获取下载地址失败：'.$ret['errno'], 2);
+		return false;
+	}
+	foreach($ret['server'] as &$v) {
+		$v = 'http://' . $v . $ret['path'];
+	}
+	return $ret['server'];
 }
