@@ -10,6 +10,16 @@ function wlog($message, $level = 0) {
 	$mysql->prepare('insert into log_new value (null,?,?,?)')->execute(array($ip,$level,$message));
 }
 
+function get_baidu_base_cookie() {
+	global $base_cookie, $ua;
+	if ($base_cookie) {
+		return $base_cookie;
+	}
+	$rq = request('http://pan.baidu.com/', $ua, '');
+	$base_cookie = $rq['header']['set-cookie'];
+	return $base_cookie;
+}
+
 function request ($url, $ua=NULL, $cookie=NULL, $postData=NULL) {
 	$hRequest = curl_init ($url);
 	if (substr($url,0,5)=='https') {
@@ -24,6 +34,8 @@ function request ($url, $ua=NULL, $cookie=NULL, $postData=NULL) {
 		curl_setopt ($hRequest, CURLOPT_USERAGENT, $ua);
 	if ($cookie)
 		curl_setopt ($hRequest, CURLOPT_COOKIE, $cookie);
+	elseif ($cookie !== '')
+		curl_setopt ($hRequest, CURLOPT_COOKIE, get_baidu_base_cookie());
 	curl_setopt($hRequest, CURLOPT_HEADER, 1);
 	curl_setopt($hRequest, CURLOPT_FOLLOWLOCATION, true);
 	curl_setopt($hRequest, CURLOPT_MAXREDIRS, 3);

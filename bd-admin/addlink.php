@@ -24,7 +24,7 @@ if(isset($_POST['submit'])) {
 		if($_POST['link']) {
 			$success=true;
 			$share_page=request('http://pan.baidu.com'.$_POST['link'],$ua);
-			$cookie=$share_page['header']['set-cookie'];
+			$cookie = set_cookie(get_baidu_base_cookie(),$share_page['header']['set-cookie']);
 			if(strpos($share_page['real_url'],'/share/init?')!==false) {
 				$success=false;
 				$share_info=substr($share_page['real_url'],strpos($share_page['real_url'],'shareid'));

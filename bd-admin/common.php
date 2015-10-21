@@ -10,6 +10,16 @@ function wlog($message, $level = 0) {
 	$mysql->prepare('insert into log_new value (null,?,?,?)')->execute(array($ip,$level,$message));
 }
 
+function get_baidu_base_cookie() {
+	global $base_cookie, $ua;
+	if ($base_cookie) {
+		return $base_cookie;
+	}
+	$rq = request('http://pan.baidu.com/', $ua, '');
+	$base_cookie = $rq['header']['set-cookie'];
+	return $base_cookie;
+}
+
 function request ($url, $ua=NULL, $cookie=NULL, $postData=NULL) {
 	$hRequest = curl_init ($url);
 	if (substr($url,0,5)=='https') {
@@ -24,6 +34,8 @@ function request ($url, $ua=NULL, $cookie=NULL, $postData=NULL) {
 		curl_setopt ($hRequest, CURLOPT_USERAGENT, $ua);
 	if ($cookie)
 		curl_setopt ($hRequest, CURLOPT_COOKIE, $cookie);
+	elseif ($cookie !== '')
+		curl_setopt ($hRequest, CURLOPT_COOKIE, get_baidu_base_cookie());
 	curl_setopt($hRequest, CURLOPT_HEADER, 1);
 	curl_setopt($hRequest, CURLOPT_FOLLOWLOCATION, true);
 	curl_setopt($hRequest, CURLOPT_MAXREDIRS, 3);
@@ -162,8 +174,7 @@ function set_cookie($cookie,$set_cookie) {
 //百度贴吧客户端登录
 function baidu_login($username,$password,$codestring='',$captcha='') {
 	global $ua;
-	$rq=request('http://pan.baidu.com/');
-	$cookie=$rq['header']['set-cookie'];
+	$cookie = get_baidu_base_cookie();
 	$post=array('isphone'=>'0','passwd'=>base64_encode($password),'un'=>$username,'vcode'=>$captcha,'vcode_md5'=>$codestring,'from'=>'baidu_appstore','stErrorNums'=>'0','stMethod'=>'1','stMode'=>'1','stSize'=>mt_rand(50,2000),'stTime'=>mt_rand(50,500),'stTimesNum'=>'0','timestamp'=>(time()*1000),'_client_id'=>'wappc_138'.mt_rand(1000000000,9999999999).'_'.mt_rand(100,999),'_client_type'=>'1','_client_version'=>'6.0.1','_phone_imei'=>md5(mt_rand()),'cuid'=>strtoupper(md5(mt_rand())).'|'.substr(md5(mt_rand()),1),'model'=>'M1');
 	ksort($post);
 	$sign='';
