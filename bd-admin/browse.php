@@ -35,7 +35,7 @@ print_header('添加文件');
 if(!isset($_SESSION['folder']) || empty($_SESSION['folder']))
 	$_SESSION['folder']=array('/');
 ?><h1>当前用户：<?=$_SESSION['username']?> <a href="switch_user.php">切换</a></h1>
-<h2>当前路径：<?=end($_SESSION['folder'])?></h2><p>注意：本程序无法检测到全部可能导致出问题的情况。请在主页中查看全部补档记录的可用性。</p><table border="1"><tr><th>操作</th><th>文件名</th><th>fs_id</th><th>状态</th><th>访问地址</th><th>分享地址</th></tr>
+<h2>当前路径：<?=end($_SESSION['folder'])?></h2><p>注意：本程序无法检测到全部可能导致出问题的情况。请在主页中查看全部补档记录的可用性。</p><table border="1"><tr><th>补档</th><th>工具</th><th>文件名</th><th>fs_id</th><th>状态</th><th>访问地址</th><th>分享地址</th></tr>
 <?php if(count($_SESSION['folder'])!=1) {
 	echo '<tr><td colspan="6"><a href="browse.php?goup=1">[返回上层文件夹]</a></tr>';
 }
@@ -74,12 +74,12 @@ foreach($filelist as &$v) {
 	if($_SESSION['filecheck'][$v['fid']]) : ?>
 	<tr><td><form method="post" action="add.php"><input type="hidden" name="fid" value="<?=$v['fid']?>" /><input type="hidden" name="filename" value="<?=$v['name']?>" /><input type="submit" name="submit" value="添加" /></form></td>
 	<?php else : ?>
-	<tr><td><input type="button" disabled="disabled" value="添加" /></td>
+	<tr><td><input type="button" disabled="disabled" value="已添加" /></td>
 <?php endif;
 	if($v['isdir']) : ?>
-	<td><a href="browse.php?switch_dir=<?=urlencode($v['name'].'/') ?>"><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?>(文件夹)</a></td>
+	<td><a href="tools/dl.php?<?=rawurlencode($v['name'])?>" target="_blank">自定义分享</a></td><td><a href="browse.php?switch_dir=<?=urlencode($v['name'].'/') ?>"><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?>(文件夹)</a></td>
 	<?php else : ?>
-	<td><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?></td>
+	<td><a href="tools/dl.php?<?=rawurlencode($v['name'])?>" target="_blank">下载</a>&nbsp;&nbsp;<a href="tools/share.php?<?=$v['fid']?>" target="_blank">自定义分享</a></td><td><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?></td>
 	<?php endif; ?>
 	<td><?=$v['fid']?></td><?=$check_result?></tr>
 <?php } ?>

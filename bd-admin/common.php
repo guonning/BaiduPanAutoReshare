@@ -93,7 +93,11 @@ function alert_error($error,$return) {
 	if (!$head) {
 		print_header('');
 	}
-	echo "<script>alert('$error');window.location.href='$return';</script></body></html>";
+	if (!$return) {
+		echo "<script>alert('$error');window.close();</script></body></html>";
+	} else {
+		echo "<script>alert('$error');window.location.href='$return';</script></body></html>";
+	}
 	die();
 }
 
@@ -212,4 +216,18 @@ function getFileMeta($file, $token, $cookie) {
 		return false;
 	}
 	return $ret;
+}
+
+function getDownloadLink($file, $token, $cookie) {
+	global $ua;
+	$ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$token&app_id=250528&path=".urlencode($file),$ua,$cookie);
+	$ret = json_decode($ret['body'], true);
+	if (isset($ret['errno'])) {
+		wlog('文件 '.$file.' 获取下载地址失败：'.$ret['errno'], 2);
+		return false;
+	}
+	foreach($ret['server'] as &$v) {
+		$v = 'http://' . $v . $ret['path'];
+	}
+	return $ret['server'];
 }

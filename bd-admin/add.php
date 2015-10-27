@@ -94,4 +94,5 @@ echo "<h2>您将添加文件：{$_POST['filename']}（fs_id：{$_POST['fid']}）
 <?php if($_SESSION['md5']=='')
 	 echo '因为没有设置MD5，无法启用换MD5补档模式。请添加一个小文件（几字节即可）并在添加时输入提取码为“md5”。<br />'; ?>
 <input type="submit" name="submit" value="提交" />&nbsp;&nbsp;&nbsp;&nbsp;<a href="browse.php">取消</a>
+</form>
 </body></html>
