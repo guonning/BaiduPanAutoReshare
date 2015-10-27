@@ -44,9 +44,19 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			} else {
 				echo '本文件只允许直链下载。<br /><br /><br />';
 			}
-			echo '下载链接已为您准备好，点击或将其复制到下载工具中开始下载。若一个链接不走，请多试几个。<br /><b>若您遇到403错误，复制链接粘贴到地址栏打开即可解决。</b>Chrome浏览器点击下面的链接不会出现403错误，但IE浏览器会出现。';
 			$link = getDownloadLink($res['name'], $token, $res['cookie']);
 			$link[] = $md5['info'][0]['dlink'];
+			if (isset($enable_direct_video_play) && $enable_direct_video_play) {
+				$subname = substr($res['name'], strlen($res['name'])-3);
+				if ($subname == 'mp4' || $subname == 'avi' || $subname == 'flv') {
+					echo '本文件为视频，可以在线播放：<br />若无法播放，请刷新多试几次，因为百度的部分服务器不允许断点续传。<br /><video controls="controls" preload="none">';
+					foreach ($link as $v) {
+						echo '<source src="'.$v.'" />';
+					}
+					echo '您的浏览器不支持video</video><br />';
+				}
+			}
+			echo '下载链接已为您准备好，点击或将其复制到下载工具中开始下载。若一个链接不走，请多试几个。<br /><b>若您遇到403错误，复制链接粘贴到地址栏打开即可解决。</b>Chrome浏览器点击下面的链接不会出现403错误，但IE浏览器会出现。';
 			foreach ($link as $k => $v) {
 				if ($k == count($link) - 1) {
 					echo '<br />最后一个链接会随机重定向到不同的服务器，但是此链接封杀下载工具的几率也最高。';
