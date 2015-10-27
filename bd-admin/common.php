@@ -89,6 +89,10 @@ function array_find($needle, $haystack,$reverse=false)
 }
 
 function alert_error($error,$return) {
+	global $head;
+	if (!$head) {
+		print_header('');
+	}
 	echo "<script>alert('$error');window.location.href='$return';</script></body></html>";
 	die();
 }
