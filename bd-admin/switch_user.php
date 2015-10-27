@@ -59,7 +59,7 @@ elseif(!isset($_GET['add_user']) && (isset($_POST['password']) || isset($_GET['r
 	print_header('确认删除');?>
 	<h1>确定要删除用户 <?=$user['username']?> 吗？<br />警告：删除用户将同时删除此用户的全部补档记录。</h1>
 	<p>您在进行风险操作，请输入 <?=$user['username']?> 的【百度密码】进行确认：</p>
-	<form method="post" action="/switch_user.php">
+	<form method="post" action="switch_user.php">
 	<input type="hidden" name="ID" value="<?=$_GET['remove_user']?>" />
 	<input type="hidden" name="name" value="<?=$user['username']?>" />
 	<input type="password" name="password" /><br />
