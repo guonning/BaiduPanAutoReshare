@@ -49,13 +49,13 @@ try {
 	$list=$mysql->query('select watchlist.*,username,cookie from watchlist left join users on watchlist.user_id=users.ID order by watchlist.failed desc, watchlist.ID')->fetchAll();
 	set_time_limit(0);
 	foreach($list as $k=>$v) {
-		echo '<td>';
+		echo '<tr id="ROW'.$v[0].'"><td>';
 		if($v['failed']) {
 			echo '<font color="red">补档失败，可能是网络问题，如果持续出现，请检查文件</font>';
 		} else {
 			echo '<font color="green">自动补档保护中</font>';
 		}
-		echo "</td><td>{$v[0]}</td><td>{$v[1]}</td><td id=\"PATH{$v[0]}\">{$v[2]}</td><td><a href=\"$jumper{$v[0]}\"  target=\"_blank\">$jumper{$v[0]}</a></td><td>{$v[5]}</td><td>{$v['username']}</td><td>{$v[4]}</td><td><a href=\"javascript:;\" onclick=\"dlt({$v[0]});\">删除</a></td></tr>";
+		echo "</td><td>{$v[0]}</td><td>{$v[1]}</td><td>{$v[2]}</td><td><a href=\"$jumper{$v[0]}\"  target=\"_blank\">$jumper{$v[0]}</a></td><td>{$v[5]}</td><td>{$v['username']}</td><td>{$v[4]}</td><td><a href=\"javascript:;\" onclick=\"dlt({$v[0]});\">删除</a></td></tr>";
 		$id[]=$v[0];
 	}
 	echo '</table>';
