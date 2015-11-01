@@ -25,27 +25,48 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	}
 	$mysql->query('set names utf8');
 	
-	$res=$mysql->prepare('select watchlist.*,username,cookie,md5 as usermd5 from watchlist left join users on users.ID=watchlist.user_id where watchlist.id=?');
-	$res->execute(array($id));
+	$res=$mysql->prepare('select watchlist.*,username,cookie,md5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
+	$result=$res->execute(array($id));
+	if (!$result) {
+		$mysql->query('CREATE TABLE IF NOT EXISTS `block_list` (
+						`ID` int(11) NOT NULL,
+						`block_list` longtext NOT NULL,
+						PRIMARY KEY (`ID`)
+					) DEFAULT CHARSET=utf8');
+		$res=$mysql->prepare('select watchlist.*,username,cookie,md5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
+		$res->execute(array($id));
+	}
 	$res=$res->fetch();
 	if(empty($res)) {
 		echo '<h1>错误：找不到编号为'.$_SERVER['QUERY_STRING'].'的记录</h1>';
 		die();
 	}
 	$token=getBaiduToken($res['cookie'],$res['username']);
-	$md5 = getFileMeta($res['name'], $token, $res['cookie']);
-	if ($md5 === false) {
+	$meta = getFileMeta($res['name'], $token, $res['cookie']);
+	if ($meta === false) {
 		echo '<h1>文件不存在QuQ</h1>';
 		die();
 	} else if ($enable_direct_link && (!isset($_GET['nodirectdownload']) || $res['link'] == '/s/notallow')) {
-		if (isset($md5['info'][0]['dlink'])) {
+		if (isset($meta['info'][0]['dlink'])) {
 			if ($res['link'] !== '/s/notallow') {
 				echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br /><br />';
 			} else {
 				echo '本文件只允许直链下载。<br /><br /><br />';
 			}
 			$link = getDownloadLink($res['name'], $token, $res['cookie']);
-			$link[] = $md5['info'][0]['dlink'];
+			foreach ($link as $v) {
+				if (strpos($v, 'wenxintishi') !== false) {
+					echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
+					$mysql->exec('update watchlist set failed=2 where id='.$_SERVER['QUERY_STRING']);
+					wlog('记录ID '.$_SERVER['QUERY_STRING'].'被温馨提示');
+					die();
+				}
+			}
+			//文件有效！如果没有保存分片信息，现在保存
+			if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
+				$mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
+			}
+			$link[] = $meta['info'][0]['dlink'];
 			if (isset($enable_direct_video_play) && $enable_direct_video_play) {
 				$subname = substr($res['name'], strlen($res['name'])-3);
 				if ($subname == 'mp4' || $subname == 'avi' || $subname == 'flv') {
@@ -72,6 +93,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		die();
 	} else {
 		if($check['valid']) {
+			//文件有效！如果没有保存分片信息，现在保存
+			if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
+				$mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
+			}
 			echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。
 				<script>window.onload=function(){window.location="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '"};</script>';
 		} elseif(!$check['user_valid']) {
@@ -86,19 +111,24 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			$newname = generateNewName() . $suffix;
 			$newfullpath=substr($path,0,1-strlen(strrchr($path,'/'))).$newname;
 			$need_rename = true;
-			if ($res['usermd5'] && !$md5['info'][0]['isdir']) {
+			if ($res['usermd5'] && !$meta['info'][0]['isdir']) {
 				//文件，执行换md5补档
-				$md5 = $md5['info'][0]['block_list'];
+				$md5 = $res['block_list'] ? json_decode($res['block_list']) : $meta['info'][0]['block_list'];
 				$md5[] = $res['usermd5'];
 				if (count($md5) < 1024) {
 					$ret=request('http://pcs.baidu.com/rest/2.0/pcs/file?method=createsuperfile&app_id=250528&path='.$newfullpath.'&ondup=overwrite',$ua,$res['cookie'],'param='.json_encode(array('block_list'=>$md5)));
 					$json=json_decode($ret['body']);
 					if (isset($json -> error_code) && $json -> error_code !== 0) {
 						wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档失败，错误代码：'.$json -> error_code, 2);
+						if ($res['failed'] == 2) { //温馨提示
+							echo '<h1>这个文件被温馨提示了……自动补档没能救活qwq请联系上传者！</h1>';
+							die();
+						}
 					} else {
 						$ret=request('http://pan.baidu.com/api/filemanager?channel=chunlei&clienttype=0&web=1&opera=delete&async=2&bdstoken='.$token.'&channel=chunlei&clienttype=0&web=1&app_id=250528',$ua,$res['cookie'],'filelist=%5B%22'.urlencode($res['name']).'%22%5D');
 						$json->fs_id=number_format($json->fs_id,0,'','');
 						$mysql->prepare('update watchlist set name=?,fid=? where id=?')->execute(array($newfullpath,$json->fs_id,$res['id']));
+						$mysql->query("replace into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($md5)."')");
 						$res['fid']=$json->fs_id;
 						wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档成功');
 						$need_rename = false;
