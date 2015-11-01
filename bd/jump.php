@@ -55,13 +55,9 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 				echo '本文件只允许直链下载。<br /><br /><br />';
 			}
 			$link = getDownloadLink($res['name'], $token, $res['cookie']);
-			foreach ($link as $v) {
-				if (strpos($v, 'wenxintishi') !== false) {
-					echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
-					$mysql->exec('update watchlist set failed=2 where id='.$_SERVER['QUERY_STRING']);
-					wlog('记录ID '.$_SERVER['QUERY_STRING'].'被温馨提示');
-					die();
-				}
+			if ($link === false) {
+				echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
+				die();
 			}
 			//文件有效！如果没有保存分片信息，现在保存
 			if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
@@ -121,6 +117,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 					$json=json_decode($ret['body']);
 					if (isset($json -> error_code) && $json -> error_code !== 0) {
 						wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档失败，错误代码：'.$json -> error_code, 2);
+						//如果没有启用直链功能，在这里检测是不是温馨提示
+						if (!$enable_direct_link && $res['failed'] != 2 && getDownloadLink($res['name'], $token, $res['cookie']) === false) {
+							$res['failed'] = 2;
+						}
 						if ($res['failed'] == 2) { //温馨提示
 							echo '<h1>这个文件被温馨提示了……自动补档没能救活qwq请联系上传者！</h1>';
 							die();

@@ -168,11 +168,16 @@ function getFileMeta($file, $token, $cookie) {
 }
 
 function getDownloadLink($file, $token, $cookie) {
-	global $ua;
+	global $ua, $mysql;
 	$ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$token&app_id=250528&path=".urlencode($file),$ua,$cookie);
 	$ret = json_decode($ret['body'], true);
 	if (isset($ret['errno'])) {
 		wlog('文件 '.$file.' 获取下载地址失败：'.$ret['errno'], 2);
+		return false;
+	}
+	if (strpos($ret['path'], 'wenxintishi') !== false) {
+		$mysql->exec('update watchlist set failed=2 where id='.$_SERVER['QUERY_STRING']);
+		wlog('记录ID '.$_SERVER['QUERY_STRING'].'被温馨提示');
 		return false;
 	}
 	foreach($ret['server'] as &$v) {
