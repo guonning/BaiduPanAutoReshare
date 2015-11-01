@@ -45,6 +45,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	$meta = getFileMeta($res['name'], $token, $res['cookie']);
 	if ($meta === false) {
 		echo '<h1>文件不存在QuQ</h1>';
+		$mysql->exec('update watchlist set failed=3 where id='.$_SERVER['QUERY_STRING']);
 		die();
 	} else if ($enable_direct_link && (!isset($_GET['nodirectdownload']) || $res['link'] == '/s/notallow')) {
 		if (isset($meta['info'][0]['dlink'])) {
