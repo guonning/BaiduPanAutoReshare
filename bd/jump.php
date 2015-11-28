@@ -25,7 +25,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	}
 	$mysql->query('set names utf8');
 	
-	$res=$mysql->prepare('select watchlist.*,username,cookie,md5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
+	$res=$mysql->prepare('select watchlist.*,username,cookie, newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
 	$result=$res->execute(array($id));
 	if (!$result) {
 		$mysql->query('CREATE TABLE IF NOT EXISTS `block_list` (
@@ -33,7 +33,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 						`block_list` longtext NOT NULL,
 						PRIMARY KEY (`ID`)
 					) DEFAULT CHARSET=utf8');
-		$res=$mysql->prepare('select watchlist.*,username,cookie,md5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
+		$mysql->exec('ALTER TABLE `users` ADD `newmd5` TEXT NOT NULL AFTER `md5`; ');
+		$mysql->exec('UPDATE `users` SET `newmd5` = if (`md5` = "", "", concat("[\"", `md5`, "\"]"))');
+		$mysql->exec('ALTER TABLE `users` DROP `md5` ;');
+		$res=$mysql->prepare('select watchlist.*,username,cookie,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
 		$res->execute(array($id));
 	}
 	$res=$res->fetch();
@@ -94,6 +97,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
 				$mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
 			}
+			$mysql->exec('update watchlist set failed=0 where id='.$_SERVER['QUERY_STRING']); //之前不知道抽什么风莫名其妙标记温馨提示
 			echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。
 				<script>window.onload=function(){window.location="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '"};</script>';
 		} elseif(!$check['user_valid']) {
@@ -111,19 +115,47 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			if ($res['usermd5'] && !$meta['info'][0]['isdir']) {
 				//文件，执行换md5补档
 				$md5 = $res['block_list'] ? json_decode($res['block_list']) : $meta['info'][0]['block_list'];
-				$md5[] = $res['usermd5'];
+				//检测当前文件用的是哪个MD5
+				$res['usermd5'] = json_decode($res['usermd5']);
+				foreach ($res['usermd5'] as $k => $v) {
+					$current_md5_key = $k;
+					$current_md5 = $v;
+					if (array_search($v, $md5) !== false) {
+						break;
+					}
+				}
+				$md5[] = $current_md5;
 				if (count($md5) < 1024) {
+					change_md5:
 					$ret=request('http://pcs.baidu.com/rest/2.0/pcs/file?method=createsuperfile&app_id=250528&path='.$newfullpath.'&ondup=overwrite',$ua,$res['cookie'],'param='.json_encode(array('block_list'=>$md5)));
 					$json=json_decode($ret['body']);
 					if (isset($json -> error_code) && $json -> error_code !== 0) {
-						wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档失败，错误代码：'.$json -> error_code, 2);
 						//如果没有启用直链功能，在这里检测是不是温馨提示
 						if (!$enable_direct_link && $res['failed'] != 2 && getDownloadLink($res['name'], $token, $res['cookie']) === false) {
 							$res['failed'] = 2;
 						}
 						if ($res['failed'] == 2) { //温馨提示
-							echo '<h1>这个文件被温馨提示了……自动补档没能救活qwq请联系上传者！</h1>';
-							die();
+							if ($current_md5_key == count($res['usermd5']) - 1) {
+								if (!isset($change_md5)) {
+									wlog('记录ID '.$_SERVER['QUERY_STRING'].'被温馨提示，备用MD5不够', 2);
+									echo '<h1>这个文件被温馨提示了……自动补档没能救活qwq请联系上传者！<br />如果您是上传者，请在后台添加一个新的补档MD5，说不定能救活。</h1>';
+								} else {
+									wlog('记录ID '.$_SERVER['QUERY_STRING'].'被温馨提示，更换补档MD5仍补档失败', 2);
+									echo '<h1>这个文件被温馨提示了……自动补档用了专救温馨提示的方法仍然没能救活qwq请联系上传者！</h1>';
+								}
+								die();
+							} else {
+								$change_md5 = true;
+								//测试结果表明，后面连了一堆相同MD5的文件被温馨提示时，只要有两个旧MD5与原文件连接就必定失败
+								//与其继续研究这个原理还不如直接换MD5来得快
+								$md5 = array_filter($md5, function ($e) use ($current_md5) {
+									return $e !== $current_md5;
+								});
+								$md5[] = $res['usermd5'][++$current_md5_key];
+								goto change_md5;
+							}
+						} else {
+							wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档失败，错误代码：'.$json -> error_code, 2);
 						}
 					} else {
 						$ret=request('http://pan.baidu.com/api/filemanager?channel=chunlei&clienttype=0&web=1&opera=delete&async=2&bdstoken='.$token.'&channel=chunlei&clienttype=0&web=1&app_id=250528',$ua,$res['cookie'],'filelist=%5B%22'.urlencode($res['name']).'%22%5D');
@@ -168,7 +200,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			}
 			echo '<script>alert("您访问的文件已经失效，但是我们进行了自动补档，提取码不变。\n本文件已自动补档'
 					. ($res['count'] + 1)
-					. '次，本次补档方式：'.(($need_rename)?'重命名':'更换MD5').'补档");window.location="'
+					. '次，本次补档方式：'.(($need_rename)?'重命名':(isset($change_md5) ? '救活温馨提示' : '更换MD5')).'补档");window.location="'
 					. $result .(($res['pass']!=='0')? ('#' . $res['pass']) :''). '";</script>';
 			echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。';
 			$result=substr($result,20);

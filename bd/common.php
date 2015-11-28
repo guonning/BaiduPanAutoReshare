@@ -121,7 +121,7 @@ function createShare($fid,$code,$token,$cookie,$return=false) {
 }
 
 function check_share($id, $link, $name, $cookie) {
-	global $ua;
+	global $ua, $mysql;
 	if(!$link || $link  == '/s/fakelink') {
 		$url='';
 		$ret['conn_valid']=true;
