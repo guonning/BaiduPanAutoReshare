@@ -92,7 +92,7 @@ function array_find($needle, $haystack,$reverse=false)
 function getBaiduToken($cookie,$username) {
 	global $ua;
 	$token=request('http://pan.baidu.com/disk/home',$ua,$cookie);
-	$bdstoken=findBetween($token['body'], 'TOKEN = "', '";');
+	$bdstoken=findBetween($token['body'], '"bdstoken":"', '",');
 	if(strlen($bdstoken)<10) {
 		return false;
 	}
