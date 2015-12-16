@@ -94,7 +94,7 @@ function getBaiduToken($cookie,$username) {
 	$token=request('http://pan.baidu.com/disk/home',$ua,$cookie);
 	$bdstoken=findBetween($token['body'], 'TOKEN = "', '";');
 	if(strlen($bdstoken)<10) {
-		alert_error('cookie失效，或者百度封了IP！','switch_user.php?name='.$username);
+		return false;
 	}
 	return $bdstoken;
 }

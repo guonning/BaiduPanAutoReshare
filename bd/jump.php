@@ -45,6 +45,15 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		die();
 	}
 	$token=getBaiduToken($res['cookie'],$res['username']);
+	if ($token === false) {
+		echo '<h1>由于cookie失效，无法进行补档，';
+		if ($res['link'] == '/s/fakelink' || $res['link'] == '/s/notallow') {
+			echo '请联系上传者！';
+		} else {
+			echo '请尝试直接<a href="http://pan.baidu.com'.$res['link'].'">访问分享页</a>';
+		}
+		die();
+	}
 	$meta = getFileMeta($res['name'], $token, $res['cookie']);
 	if ($meta === false) {
 		echo '<h1>文件不存在QuQ</h1>';
@@ -210,17 +219,6 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		}
 	}
 } else { ?>
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-	<style>body{font-family:'Microsoft YaHei UI','Microsoft JHengHei UI',sans-serif}</style>
-	<meta charset="UTF-8">
-	<title>度娘盘分享守护程序</title>
-</head>
-<body>
-	<h1>度娘盘分享守护程序</h1>
-	<p>by 虹原翼</p>
-	<p>9月19日升级：支持更换除8秒视频外任何文件的MD5</p>
 	<h2>未指定要提取的文件！</h2>
 <?php } ?>
 </body>

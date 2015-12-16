@@ -99,14 +99,14 @@ echo "<h2>您将添加文件：{$_POST['filename']}（fs_id：{$_POST['fid']}）
 提取码（4位，公开分享请留空）：<input type="text" name="code" /><br />*用作连接补档请输入"md5"<br /><br />
 分享选项（如果添加的是文件夹，本项会被无视）：<br />
 <input type="radio" name="no_share" value="0" checked="checked" />照常创建分享<br />
-<input type="radio" name="no_share" value="1" />第一次访问时创建分享（需要测试文件是否能更换MD5时可选择此项）<br />
+<input type="radio" name="no_share" value="1" />第一次访问时创建分享（添加视频时请选择此项！这样将来救活温馨提示的可能性更大）<br />
 <?php if ($enable_direct_link) { ?>
 <input type="radio" name="no_share" value="2" />不建立分享，只允许直链下载，禁止前往提取页（文件夹会无视此项）<br />
 <?php } ?>
 <br />
 现在换MD5补档模式为全局启用状态，所有文件强制换MD5补档。请不要添加txt等在结尾连接内容后影响使用的格式！<br />
 <?php if($_SESSION['md5']=='')
-	 echo '<b><font color="red">因为没有设置MD5，无法启用换MD5补档模式。请添加一个小文件（几字节即可）并在添加时输入提取码为“md5”。</font></b><br />'; ?>
+	 echo '<b><font color="red">因为没有设置MD5，无法启用换MD5补档模式。请添加一个或几个小文件（几字节即可）并在添加时输入提取码为“md5”。</font></b>建议添加多个，这样可以提高救活温馨提示视频的几率。<br />'; ?>
 <input type="submit" name="submit" value="提交" />&nbsp;&nbsp;&nbsp;&nbsp;<a href="browse.php">取消</a>
 </form>
 </body></html>
