@@ -103,7 +103,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	} else {
 		if($check['valid']) {
 			//文件有效！如果没有保存分片信息，现在保存
-			if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
+			if (!$meta['info'][0]['isdir'] && $res['block_list'] == NULL && $meta['info'][0]['block_list']) {
 				$mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
 			}
 			$mysql->exec('update watchlist set failed=0 where id='.$_SERVER['QUERY_STRING']); //之前不知道抽什么风莫名其妙标记温馨提示
