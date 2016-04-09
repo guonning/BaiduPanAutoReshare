@@ -23,16 +23,16 @@ if(isset($_POST['submit'])) {
 		}
 		if($_POST['link']) {
 			$success=true;
-			$share_page=request('http://pan.baidu.com'.$_POST['link'],$ua_browser);
+			$share_page=request('http://pan.baidu.com'.$_POST['link'],$ua);
 			$cookie = set_cookie(get_baidu_base_cookie(),$share_page['header']['set-cookie']);
 			if(strpos($share_page['real_url'],'/share/init?')!==false) {
 				$success=false;
 				$share_info=substr($share_page['real_url'],strpos($share_page['real_url'],'shareid'));
-				$verify=request('http://pan.baidu.com/share/verify?'.$share_info.'&t='.(time()*1000).'&channel=chunlei&clienttype=0&web=1',$ua_browser,$cookie,'pwd='.$_POST['code'].'&vcode=');
+				$verify=request('http://pan.baidu.com/share/verify?'.$share_info.'&t='.(time()*1000).'&channel=chunlei&clienttype=0&web=1',$ua,$cookie,'pwd='.$_POST['code'].'&vcode=');
 				$verify_ret=json_decode($verify['body']);
 				if($verify_ret->errno==0) {
 					$cookie=set_cookie($cookie,$verify['header']['set-cookie']);
-					$share_page=request('http://pan.baidu.com/share/link?'.$share_info,$ua_browser,$cookie);
+					$share_page=request('http://pan.baidu.com/share/link?'.$share_info,$ua,$cookie);
 					$success=true;
 				}elseif($verify_ret->errno==-9) {
 					echo '<h1>错误：提取码错误。</h1>';
