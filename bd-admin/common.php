@@ -51,8 +51,13 @@ function request ($url, $ua=NULL, $cookie=NULL, $postData=NULL) {
 
 	foreach($headerRaw as $line) {
 		$exp = explode(': ', $line, 2);
-		if (count($exp) == 2)
-			$ret['header'][strtolower($exp[0])] = $exp[1];
+		if (count($exp) == 2) {
+			if (strtolower($exp[0]) == 'set-cookie' && isset($ret['header']['set-cookie'])) {
+				$ret['header']['set-cookie'] .= '; '.$exp[1];
+			} else {
+				$ret['header'][strtolower($exp[0])] = $exp[1];
+			}
+		}
 	}
 
 	$ret['code'] = curl_getinfo($hRequest, CURLINFO_HTTP_CODE);
@@ -176,7 +181,20 @@ function refresh_watchlist() {
 }
 
 function set_cookie($cookie,$set_cookie) {
-	return implode('; ',array_merge(explode('; ',$cookie),explode('; ',$set_cookie)));
+	$old_cookie = [];
+	foreach (explode('; ',$cookie) as $v) {
+		$tmp = explode('=', $v);
+		$old_cookie[$tmp[0]] = $tmp[1];
+	}
+	foreach (explode('; ',$set_cookie) as $v) {
+		$tmp = explode('=', $v);
+		$old_cookie[$tmp[0]] = $tmp[1];
+	}
+	$new_cookie = [];
+	foreach ($old_cookie as $k => $v) {
+		$new_cookie[] = "$k=$v";
+	}
+	return implode('; ', $new_cookie);
 }
 
 //百度贴吧客户端登录
