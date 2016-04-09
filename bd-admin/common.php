@@ -183,7 +183,7 @@ function set_cookie($cookie,$set_cookie) {
 function baidu_login($username,$password,$codestring='',$captcha='') {
 	global $ua;
 	$cookie = get_baidu_base_cookie();
-	$post=array('isphone'=>'0','passwd'=>base64_encode($password),'un'=>$username,'vcode'=>$captcha,'vcode_md5'=>$codestring,'from'=>'baidu_appstore','stErrorNums'=>'0','stMethod'=>'1','stMode'=>'1','stSize'=>mt_rand(50,2000),'stTime'=>mt_rand(50,500),'stTimesNum'=>'0','timestamp'=>(time()*1000),'_client_id'=>'wappc_138'.mt_rand(1000000000,9999999999).'_'.mt_rand(100,999),'_client_type'=>'1','_client_version'=>'6.0.1','_phone_imei'=>md5(mt_rand()),'cuid'=>strtoupper(md5(mt_rand())).'|'.substr(md5(mt_rand()),1),'model'=>'M1');
+	$post=array('isphone'=>'0','passwd'=>base64_encode($password),'un'=>$username,'vcode'=>$captcha,'vcode_md5'=>$codestring,'from'=>'baidu_appstore','stErrorNums'=>'0','stMethod'=>'1','stMode'=>'1','stSize'=>mt_rand(50,2000),'stTime'=>mt_rand(50,500),'stTimesNum'=>'0','timestamp'=>(time()*1000),'_client_id'=>'wappc_138'.(mt_rand(1000000,9999999) * 1000).'_'.mt_rand(100,999),'_client_type'=>'1','_client_version'=>'6.0.1','_phone_imei'=>md5(mt_rand()),'cuid'=>strtoupper(md5(mt_rand())).'|'.substr(md5(mt_rand()),1),'model'=>'M1');
 	ksort($post);
 	$sign='';
 	foreach($post as $k=>$v) {
