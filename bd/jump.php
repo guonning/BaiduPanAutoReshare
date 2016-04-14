@@ -50,7 +50,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		if ($res['link'] == '/s/fakelink' || $res['link'] == '/s/notallow') {
 			echo '请联系上传者！';
 		} else {
-			echo '请尝试直接<a href="http://pan.baidu.com'.$res['link'].'">访问分享页</a>';
+			echo '请尝试直接<a href="http://pan.baidu.com'.$res['link'].'">访问分享页</a>（提取密码：' . $res['pass'] . '）';
 		}
 		die();
 	}
@@ -98,7 +98,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	}
 	$check=check_share($_SERVER['QUERY_STRING'], $res['link'], $res['name'], $res['cookie']);
 	if(!$check['conn_valid']) {
-		echo '补档娘暂时无法访问百度。点击<a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">这里</a>尝试访问您要下载的文件。';
+		echo '补档娘暂时无法访问百度。点击<a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">这里</a>尝试访问您要下载的文件。（提取码：'.$res['pass'].'）';
 		die();
 	} else {
 		if($check['valid']) {
