@@ -174,6 +174,7 @@ function refresh_watchlist() {
 	if(isset($_SESSION['list'])) unset($_SESSION['list']);
 	if(isset($_SESSION['list_filenames'])) unset($_SESSION['list_filenames']);
 	$list=$mysql->query('select watchlist.* from watchlist left join users on watchlist.user_id=users.ID where watchlist.user_id='.$_SESSION['user_id'])->fetchAll();
+	$_SESSION['list_filenames'] = array();
 	foreach($list as $k=>$v) {
 		$_SESSION['list'][$v[1]]=array('id'=>$v[0],'filename'=>$v[2],'link'=>$v[3]);
 		$_SESSION['list_filenames'][$v[1]]=$v[2];
