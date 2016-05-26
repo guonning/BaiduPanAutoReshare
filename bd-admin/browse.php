@@ -39,7 +39,7 @@ if(!isset($_SESSION['folder']) || empty($_SESSION['folder']))
 <?php if(count($_SESSION['folder'])!=1) {
 	echo '<tr><td colspan="7"><a href="browse.php?goup=1">[返回上层文件夹]</a></tr>';
 }
-$filelist=getBaiduFileList(end($_SESSION['folder']),$_SESSION['bds_token'],$_SESSION['cookie']);
+$filelist=getBaiduFileList(urlencode(end($_SESSION['folder'])),$_SESSION['bds_token'],$_SESSION['cookie']);
 refresh_watchlist();
 if(!isset($_SESSION['list'])) {
 	$_SESSION['list']=array();
@@ -60,10 +60,14 @@ foreach($filelist as &$v) {
 		$check_result.='<td><a href="'. $jumper.$_SESSION['list'][$v['fid']]['id'].'" target="_blank">'. $jumper.$_SESSION['list'][$v['fid']]['id'].'</a></td><td><a href="http://pan.baidu.com'.$_SESSION['list'][$v['fid']]['link'].'">http://pan.baidu.com'.$_SESSION['list'][$v['fid']]['link'].'</a></td>';
 		unset($_SESSION['list'][$v['fid']],$_SESSION['list_filenames'][$v['fid']]);
 	} else {
-		if(array_find($v['name'].'/',$_SESSION['list_filenames'])!==false) {
-			$check_result='<td colspan="3"><font color="blue">文件夹内的文件被加入自动补档</font></td>';
+    if (count(array_filter($_SESSION['list_filenames'], function ($e) use ($v) {
+      return strpos($e, $v['name'].'/') !== false;
+    }))) {
+      $check_result='<td colspan="3"><font color="blue">文件夹内的文件被加入自动补档</font></td>';
 			$_SESSION['filecheck'][$v['fid']]=false;
-		} elseif(array_find($v['name'],$_SESSION['list_filenames'],true)!==false) {
+		} elseif(count(array_filter($_SESSION['list_filenames'], function ($e) use ($v) {
+      return strpos($v['name'], $e.'/') !== false;
+    }))) {
 			$check_result='<td colspan="3"><font color="blue">父文件夹被加入自动补档</font></td>';
 			$_SESSION['filecheck'][$v['fid']]=false;
 		} else {

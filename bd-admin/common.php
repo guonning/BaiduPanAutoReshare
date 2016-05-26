@@ -75,24 +75,6 @@ function findBetween ($str, $begin, $end) {
 	return substr($str, $pos1 + strlen($begin), $pos2 - $pos1 - strlen($begin));
 }
 
-function array_find($needle, $haystack,$reverse=false)
-{
-   foreach ($haystack as $item)
-   {
-      if (!$reverse && strpos($item, $needle) !== FALSE)
-      {
-         return $item;
-         break;
-      }
-      elseif ($reverse && strpos($needle, $item) !== FALSE)
-      {
-         return $item;
-         break;
-      }
-   }
-   return false;
-}
-
 function alert_error($error,$return) {
 	global $head;
 	if (!$head) {
