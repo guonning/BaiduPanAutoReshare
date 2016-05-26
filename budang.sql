@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `log_new` (
   `IP` varchar(15) NOT NULL,
   `level` tinyint(4) NOT NULL,
   `content` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `users` (
   `ID` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
