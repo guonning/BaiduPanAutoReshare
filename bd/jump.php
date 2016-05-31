@@ -66,6 +66,9 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			} else {
 				echo '本文件只允许直链下载。<br /><br /><br />';
 			}
+      if (!isset($enable_high_speed_link) || $enable_high_speed_link) {
+        $link2 = getHispeedDownloadLink($res['name'], $res['cookie']);
+      }
 			$link = getDownloadLink($res['name'], $token, $res['cookie']);
 			if ($link === false) {
 				echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
@@ -75,7 +78,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
 				$mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
 			}
-			$link[] = $meta['info'][0]['dlink'];
+			//$link[] = $meta['info'][0]['dlink']; 这个地址可以不要了
 			if (isset($enable_direct_video_play) && $enable_direct_video_play) {
 				$subname = substr($res['name'], strlen($res['name'])-3);
 				if ($subname == 'mp4' || $subname == 'avi' || $subname == 'flv') {
@@ -86,12 +89,20 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 					echo '您的浏览器不支持video</video><br />';
 				}
 			}
-			echo '下载链接已为您准备好，点击或将其复制到下载工具中开始下载。若一个链接不走，请多试几个。<br /><b>若您遇到403错误，复制链接粘贴到地址栏打开即可解决。</b>Chrome浏览器点击下面的链接不会出现403错误，但IE浏览器会出现。';
+      if (isset($link2)) {
+        echo '高速下载地址：<br /><b>若无法下载，建议前往提取页使用百度干净云等工具进行下载。也可尝试下方的“限速下载地址”。</b><br />（据不完全统计，运行本程序的服务器和下载者的IP不在同一个国家的情况下会无法下载）';
+        if (!isset($enable_high_speed_link)) {
+          echo '<br /><span style="color:red">警告：本功能的开关未配置。请在配置文件中添加 $enable_high_speed_link 项，设为true为启用，false为禁用。</span>';
+        }
+        foreach ($link2 as $k => $v) {
+          echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a></small><br />';
+        }
+        echo '<br />限速下载地址（基本确保可以下载）：';
+      } else {
+        echo '直链下载地址（有限速，如果可以，建议前往提取页使用百度干净云等工具进行下载。）：';
+      }
 			foreach ($link as $k => $v) {
-				if ($k == count($link) - 1) {
-					echo '<br />最后一个链接会随机重定向到不同的服务器，但是此链接封杀下载工具的几率也最高。';
-				}
-				echo '<br /><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a><br />';
+				echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a></small><br />';
 			}
 			die();
 		}

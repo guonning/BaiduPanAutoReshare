@@ -167,6 +167,19 @@ function getFileMeta($file, $token, $cookie) {
 	return $ret;
 }
 
+function getHispeedDownloadLink($file, $cookie) {
+	global $ua;
+  $ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&check_blue=1&es=1&esl=1&app_id=250528&path=".urlencode($file).'&ver=4.0&dtype=1&err_ver=1.0',$ua,$cookie);
+	$ret = json_decode($ret['body'], true);
+	if (!isset($ret['urls'])) {
+		wlog('文件 '.$file.' 获取下载地址失败：'.json_encode($ret), 2);
+		return false;
+	}
+	return array_map(function ($e) {
+    return $e['url'];
+  }, $ret['urls']);
+}
+
 function getDownloadLink($file, $token, $cookie) {
 	global $ua, $mysql;
 	$ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$token&app_id=250528&path=".urlencode($file),$ua,$cookie);
