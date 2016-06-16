@@ -1,12 +1,7 @@
-<?php require 'common.php';
-try {
-	$mysql=new PDO("mysql:host=$host;dbname=$db",$user,$pass);
-}catch(PDOException $e) {
-	print_header('出错了！');
-	echo '<h1>错误：无法连接数据库</h1>';
-}
-$mysql->query('set names utf8');
-session_start();
+<?php
+require 'includes/common.php';
+
+
 print_header('添加记录');
 if(isset($_POST['submit'])) {
 	if($_POST['code']=='') $_POST['code']=0;
@@ -23,16 +18,15 @@ if(isset($_POST['submit'])) {
 		}
 		if($_POST['link']) {
 			$success=true;
-			$share_page=request('http://pan.baidu.com'.$_POST['link'],$ua);
-			$cookie = set_cookie(get_baidu_base_cookie(),$share_page['header']['set-cookie']);
+			request('http://pan.baidu.com');
+			$share_page = request('http://pan.baidu.com'.$_POST['link']);
 			if(strpos($share_page['real_url'],'/share/init?')!==false) {
 				$success=false;
 				$share_info=substr($share_page['real_url'],strpos($share_page['real_url'],'shareid'));
-				$verify=request('http://pan.baidu.com/share/verify?'.$share_info.'&t='.(time()*1000).'&channel=chunlei&clienttype=0&web=1',$ua,$cookie,'pwd='.$_POST['code'].'&vcode=');
+				$verify=request('http://pan.baidu.com/share/verify?'.$share_info.'&t='.(time()*1000).'&channel=chunlei&clienttype=0&web=1','pwd='.$_POST['code'].'&vcode=');
 				$verify_ret=json_decode($verify['body']);
 				if($verify_ret->errno==0) {
-					$cookie=set_cookie($cookie,$verify['header']['set-cookie']);
-					$share_page=request('http://pan.baidu.com/share/link?'.$share_info,$ua,$cookie);
+					$share_page=request('http://pan.baidu.com/share/link?'.$share_info);
 					$success=true;
 				}elseif($verify_ret->errno==-9) {
 					echo '<h1>错误：提取码错误。</h1>';
@@ -44,7 +38,7 @@ if(isset($_POST['submit'])) {
 				}
 			} else $_POST['code']=0;
 			if($success) {
-				$fileinfo=json_decode(FindBetween($share_page['body'],'var _context = ',';'),true);
+				$fileinfo=json_decode(findBetween($share_page['body'],'var _context = ',';'),true);
 				if($fileinfo==NULL) {
 					echo '<h1>错误：找不到文件信息，可能韩度修改了页面结构，请联系作者！</h1>';
 				}else{
@@ -85,7 +79,7 @@ if(isset($_POST['submit'])) {
 <?php
 if(isset($need_vcode)) {
 	echo '请输入验证码：<input type="text" name="verify" />';
-	$vcode=request("http://pan.baidu.com/share/captchaip?web=1&t=0&$share_info&channel=chunlei&clienttype=0&web=1",$ua);
+	$vcode=request("http://pan.baidu.com/share/captchaip?web=1&t=0&$share_info&channel=chunlei&clienttype=0&web=1");
 	$vcode=json_decode($vcode['body']);
 	if($vcode->errno)
 		echo '获取验证码出现错误<br />';

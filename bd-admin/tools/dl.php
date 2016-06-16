@@ -1,13 +1,17 @@
 <?php
-include_once('../common.php');
+require(dirname(__FILE__).'/../includes/common.php');
 session_start();
 print_header('下载文件');
-if (!isset($_SERVER['QUERY_STRING']) || !isset($_SESSION['bds_token']) || !isset($_SESSION['cookie'])) {
+if (!isset($_SERVER['QUERY_STRING']) || !isset($_SESSION['uid'])) {
 	alert_error('找不到文件', false);
 }
 
-$link = getHispeedDownloadLink(urldecode($_SERVER['QUERY_STRING']), $_SESSION['cookie']);
-$link2 = getDownloadLink(urldecode($_SERVER['QUERY_STRING']), $_SESSION['bds_token'], $_SESSION['cookie']);
+if (!loginFromDatabase($_SESSION['uid'])) {
+  alert_error('cookie失效，或者百度封了IP！', false);
+}
+
+$link = getPremiumDownloadLink(urldecode($_SERVER['QUERY_STRING']));
+$link2 = getNormalDownloadLink(urldecode($_SERVER['QUERY_STRING']));
 if (!$link) {
 	alert_error('找不到文件', false);
 }

@@ -1,6 +1,15 @@
-<?php require '../common.php';
+<?php
+require(dirname(__FILE__).'/../includes/common.php');
 session_start();
 print_header('创建分享');
+
+if(!isset($_SESSION['uid']) || !is_numeric($_SESSION['uid'])) {
+	alert_error('未选择用户', false);
+}
+
+if (!loginFromDatabase($_SESSION['uid'])) {
+  alert_error('cookie失效，或者百度封了IP！', false);
+}
 
 if(isset($_POST['submit']) && $_POST['submit']=='创建' && isset($_POST['type'])) {
 	if ($_POST['type'] == 0 && strlen($_POST['code'])!=4) {
@@ -9,16 +18,19 @@ if(isset($_POST['submit']) && $_POST['submit']=='创建' && isset($_POST['type']
 		echo '<h1>错误：无效参数</h1>';
 	} else {
 		if ($_POST['type'] == 0) {
-			createShare($_POST['fid'],$_POST['code'],$_SESSION['bds_token'],$_SESSION['cookie'],0);
+			$result = share($_POST['fid'],$_POST['code'], true);
 		} elseif ($_POST['type'] == 1) {
-			createShare($_POST['fid'],'无',$_SESSION['bds_token'],$_SESSION['cookie'],0);
+			$result = share($_POST['fid'],'无',true);
 		} elseif ($_POST['type'] == 2) {
 			alert_error('暂不支持此种分享的创建！', false);
 		}
+    if (!$result) {
+      alert_error('分享创建失败！', false);
+    }
 		die();
 	}
 } else {
-	if(!isset($_SERVER['QUERY_STRING']) || !isset($_SESSION['filecheck'][$_SERVER['QUERY_STRING']])) {
+	if(!isset($_SERVER['QUERY_STRING']) || !isset($_SESSION['file_can_add'][$_SERVER['QUERY_STRING']])) {
 		alert_error('请勿直接访问本页。','../browse.php');
 	}
 }
