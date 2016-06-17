@@ -1,5 +1,6 @@
 <?php
 require('config.php');
+require('curl.php');
 
 function wlog($message, $level = 0) {
 	global $mysql;
@@ -10,58 +11,6 @@ function wlog($message, $level = 0) {
 	$mysql->prepare('insert into log_new value (null,?,?,?)')->execute(array($ip,$level,$message));
 }
 
-function get_baidu_base_cookie() {
-	global $base_cookie, $ua;
-	if ($base_cookie) {
-		return $base_cookie;
-	}
-	$rq = request('http://pan.baidu.com/', $ua, '');
-	$base_cookie = $rq['header']['set-cookie'];
-	return $base_cookie;
-}
-
-function request ($url, $ua=NULL, $cookie=NULL, $postData=NULL) {
-	$hRequest = curl_init ($url);
-	if (substr($url,0,5)=='https') {
-        curl_setopt ($hRequest, CURLOPT_SSL_VERIFYHOST, 2);
-        curl_setopt ($hRequest, CURLOPT_SSL_VERIFYPEER, false);
-    }
-	if ($postData!==NULL) {
-		curl_setopt ($hRequest, CURLOPT_POST, true);
-		curl_setopt ($hRequest, CURLOPT_POSTFIELDS, $postData);
-	}
-	if ($ua!==NULL)
-		curl_setopt ($hRequest, CURLOPT_USERAGENT, $ua);
-	if ($cookie)
-		curl_setopt ($hRequest, CURLOPT_COOKIE, $cookie);
-	elseif ($cookie !== '')
-		curl_setopt ($hRequest, CURLOPT_COOKIE, get_baidu_base_cookie());
-	curl_setopt($hRequest, CURLOPT_HEADER, 1);
-	curl_setopt($hRequest, CURLOPT_FOLLOWLOCATION, true);
-	curl_setopt($hRequest, CURLOPT_MAXREDIRS, 3);
-
-	curl_setopt($hRequest, CURLOPT_RETURNTRANSFER, true);
-	$response = curl_exec($hRequest);
-	$ret = array ('header' => array());
-	$head_size = curl_getinfo($hRequest, CURLINFO_HEADER_SIZE);
-	$body = substr($response, $head_size);
-	$headerRaw = explode("\r\n", substr($response, 0, $head_size));
-	array_shift($headerRaw);
-	$ret['body'] = $body;
-
-	foreach($headerRaw as $line) {
-		$exp = explode(': ', $line, 2);
-		if (count($exp) == 2)
-			$ret['header'][strtolower($exp[0])] = $exp[1];
-	}
-
-	$ret['code'] = curl_getinfo($hRequest, CURLINFO_HTTP_CODE);
-	$ret['real_url'] = curl_getinfo($hRequest, CURLINFO_EFFECTIVE_URL);
-	$ret['error']=curl_error($hRequest);
-	curl_close ($hRequest);
-	return $ret;
-}
-
 function findBetween ($str, $begin, $end) {
 	if (false === ($pos1 = strpos ($str, $begin))
 		||  false === ($pos2 = strpos($str, $end, $pos1 + 1))
@@ -70,58 +19,73 @@ function findBetween ($str, $begin, $end) {
 	return substr($str, $pos1 + strlen($begin), $pos2 - $pos1 - strlen($begin));
 }
 
-function array_find($needle, $haystack,$reverse=false)
-{
-   foreach ($haystack as $item)
-   {
-      if (!$reverse && strpos($item, $needle) !== FALSE)
-      {
-         return $item;
-         break;
-      }
-      elseif ($reverse && strpos($needle, $item) !== FALSE)
-      {
-         return $item;
-         break;
-      }
-   }
-   return false;
+$bdstoken = false;
+$bduss = false;
+$uid = false;
+$username = false;
+$md5 = false;
+
+function validateCookieAndGetBdstoken() {
+  $token = request('http://pan.baidu.com/disk/home');
+  $bdstoken = findBetween($token['body'], '"bdstoken":"', '",');
+  if (strlen($bdstoken) < 10) {
+    return false;
+  }
+  return $bdstoken;
 }
 
-
-function getBaiduToken($cookie,$username) {
-	global $ua;
-	$token=request('http://pan.baidu.com/disk/home',$ua,$cookie);
-	$bdstoken=findBetween($token['body'], '"bdstoken":"', '",');
-	if(strlen($bdstoken)<10) {
-		return false;
-	}
-	return $bdstoken;
+function loginFromDatabase($_uid) {
+  global $mysql;
+  $user = $mysql->query('select * from users where ID='.$_uid)->fetch();
+  if (!$user) {
+    return -1;
+  }
+  set_cookie($user['cookie']);
+  if (isset($user['bduss'])) { //删除数据库里的无用列
+    $mysql->query('ALTER TABLE `users` DROP `bduss`');
+  }
+  global $cookie_jar, $bduss;
+  if (!isset($cookie_jar['BDUSS'])) {
+    return false;
+  }
+  $bduss = $cookie_jar['BDUSS'];
+  //原本想把bdstoken存进数据库，想到需要检验cookie是否合法，还是改成动态获取
+  global $bdstoken;
+  $bdstoken = validateCookieAndGetBdstoken();
+  if (!$bdstoken) {
+    $bduss = false;
+    return false;
+  }
+  global $uid, $username, $md5;
+  $uid = $_uid;
+  $username = $user['username'];
+  $md5 = ($user['newmd5'] === '') ? false : $user['newmd5'];
+  return true;
 }
 
-function createShare($fid,$code,$token,$cookie,$return=false) {
-	global $ua;
-	if(strlen($code)!=4) //我看你还抽不
-		$post="fid_list=%5B$fid%5D&schannel=0&channel_list=%5B%5D";
-	else
-		$post="fid_list=%5B$fid%5D&schannel=4&channel_list=%5B%5D&pwd=$code";
-	$ret=request("http://pan.baidu.com/share/set?channel=chunlei&clienttype=0&web=1&bdstoken=$token&channel=chunlei&clienttype=0&web=1&app_id=250528",$ua,$cookie,$post);
-	$ret=json_decode($ret['body']);
-	if($return!==false) {
-		if($ret->errno) {
-			alert_error('分享失败',$return);
-			die();
-		}
-		echo '<p>分享创建成功。<br />分享地址为：'.$ret->link.'<br />短地址为：'.$ret->shorturl.'<br />提取码为：'.$code.'</p>';
-	} elseif($ret->errno || !isset($ret->shorturl) || !$ret->shorturl) {
-		wlog('分享失败：'.print_r($ret,true), 2);
-		return false;
-	}
-	return $ret->shorturl;
+function share($fid, $code, $show_result = false) {
+  global $bdstoken;
+  if (strlen($code) != 4) {//我看你还抽不
+    $post="fid_list=%5B$fid%5D&schannel=0&channel_list=%5B%5D";
+  } else {
+    $post="fid_list=%5B$fid%5D&schannel=4&channel_list=%5B%5D&pwd=$code";
+  }
+  $ret = request("http://pan.baidu.com/share/set?channel=chunlei&clienttype=0&web=1&bdstoken=$bdstoken&channel=chunlei&clienttype=0&web=1&app_id=250528", $post);
+  $ret = json_decode($ret['body']);
+  if ($show_result !== false) {
+    if (!$ret->errno) {
+      echo '<p>分享创建成功。<br />分享地址为：'.$ret->link.'<br />短地址为：'.$ret->shorturl.'<br />提取码为：'.$code.'</p>';
+    }
+  }
+  if ($ret->errno || !isset($ret->shorturl) || !$ret->shorturl) {
+    wlog('分享失败：'.print_r($ret, true), 2);
+    return false;
+  }
+  return $ret->shorturl;
 }
 
-function check_share($id, $link, $name, $cookie) {
-	global $ua, $mysql;
+function checkShare($id, $link, $name) {
+	global $mysql;
 	if(!$link || $link  == '/s/fakelink') {
 		$url='';
 		$ret['conn_valid']=true;
@@ -129,7 +93,7 @@ function check_share($id, $link, $name, $cookie) {
 		$ret['valid']=false;
 	} else {
 		$url='http://pan.baidu.com'.$link;
-		$check=request($url,$ua,$cookie);
+		$check=request($url);
 		if(strpos($check['body'],'你所访问的页面不存在了。')) {
 			$ret['conn_valid']=false;
 		}else if(strpos($check['body'],'涉及侵权、色情、反动、低俗')===false && strpos($check['body'],'分享的文件已经被')===false && $link) {
@@ -155,46 +119,40 @@ function check_share($id, $link, $name, $cookie) {
 	return $ret;
 }
 
-function getFileMeta($file, $token, $cookie) {
-	global $ua;
-	$post='target=%5B%22'.urlencode($file).'%22%5D';
-	$ret=request("http://pan.baidu.com/api/filemetas?blocks=1&dlink=1&bdstoken=$token&channel=chunlei&clienttype=0&web=1&app_id=250528",$ua,$cookie,$post);
-	$ret = json_decode($ret['body'], true);
-	if ($ret['errno']) {
-		wlog('文件 '.$file.' 获取分片列表失败：'.$ret['errno'], 2);
-		return false;
-	}
-	return $ret;
+function getFileMetas($file) {
+  global $ua, $bdstoken;
+  $post = 'target=%5B%22'.urlencode($file).'%22%5D';
+  $ret = request("http://pan.baidu.com/api/filemetas?blocks=1&dlink=1&bdstoken=$bdstoken&channel=chunlei&clienttype=0&web=1&app_id=250528", $post);
+  $ret = json_decode($ret['body'], true);
+  if ($ret['errno']) {
+    wlog('文件 '.$file.' 获取分片列表失败：'.$ret['errno'], 2);
+    return false;
+  }
+  return $ret;
 }
 
-function getHispeedDownloadLink($file, $cookie) {
-	global $ua;
-  $ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&check_blue=1&es=1&esl=1&app_id=250528&path=".urlencode($file).'&ver=4.0&dtype=1&err_ver=1.0',$ua,$cookie);
-	$ret = json_decode($ret['body'], true);
-	if (!isset($ret['urls'])) {
-		wlog('文件 '.$file.' 获取下载地址失败：'.json_encode($ret), 2);
-		return false;
-	}
-	return array_map(function ($e) {
+function getPremiumDownloadLink($file) {
+  $ret = request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&check_blue=1&es=1&esl=1&app_id=250528&path=".urlencode($file).'&ver=4.0&dtype=1&err_ver=1.0');
+  $ret = json_decode($ret['body'], true);
+  if (!isset($ret['urls'])) {
+    wlog('文件 '.$file.' 获取高速下载地址失败：'.json_encode($ret), 2);
+    return false;
+  }
+  return array_map(function ($e) {
     return $e['url'];
   }, $ret['urls']);
 }
 
-function getDownloadLink($file, $token, $cookie) {
-	global $ua, $mysql;
-	$ret=request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$token&app_id=250528&path=".urlencode($file),$ua,$cookie);
-	$ret = json_decode($ret['body'], true);
-	if (isset($ret['errno'])) {
-		wlog('文件 '.$file.' 获取下载地址失败：'.$ret['errno'], 2);
-		return false;
-	}
-	if (strpos($ret['path'], 'wenxintishi') !== false) {
-		$mysql->exec('update watchlist set failed=2 where id='.$_SERVER['QUERY_STRING']);
-		wlog('记录ID '.$_SERVER['QUERY_STRING'].'被温馨提示');
-		return false;
-	}
-	foreach($ret['server'] as &$v) {
-		$v = 'http://' . $v . $ret['path'];
-	}
-	return $ret['server'];
+function getNormalDownloadLink($file) {
+  global $bdstoken;
+  $ret = request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$bdstoken&app_id=250528&path=".urlencode($file));
+  $ret = json_decode($ret['body'], true);
+  if (isset($ret['errno'])) {
+    wlog('文件 '.$file.' 获取限速下载地址失败：'.$ret['errno'], 2);
+    return false;
+  }
+  foreach($ret['server'] as &$v) {
+    $v = 'http://' . $v . $ret['path'];
+  }
+  return $ret['server'];
 }

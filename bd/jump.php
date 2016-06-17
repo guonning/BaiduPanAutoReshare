@@ -25,7 +25,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 	}
 	$mysql->query('set names utf8');
 	
-	$res=$mysql->prepare('select watchlist.*,username,cookie, newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
+	$res=$mysql->prepare('select watchlist.*,users.ID as uid,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
 	$result=$res->execute(array($id));
 	if (!$result) {
 		$mysql->query('CREATE TABLE IF NOT EXISTS `block_list` (
@@ -36,7 +36,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		$mysql->exec('ALTER TABLE `users` ADD `newmd5` TEXT NOT NULL AFTER `md5`; ');
 		$mysql->exec('UPDATE `users` SET `newmd5` = if (`md5` = "", "", concat("[\"", `md5`, "\"]"))');
 		$mysql->exec('ALTER TABLE `users` DROP `md5` ;');
-		$res=$mysql->prepare('select watchlist.*,username,cookie,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
+		$res=$mysql->prepare('select watchlist.*,users.ID as uid,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
 		$res->execute(array($id));
 	}
 	$res=$res->fetch();
@@ -44,8 +44,8 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		echo '<h1>错误：找不到编号为'.$_SERVER['QUERY_STRING'].'的记录</h1>';
 		die();
 	}
-	$token=getBaiduToken($res['cookie'],$res['username']);
-	if ($token === false) {
+	$login_test=loginFromDatabase($res['uid']);
+	if ($login_test !== true) {
 		echo '<h1>由于cookie失效，无法进行补档，';
 		if ($res['link'] == '/s/fakelink' || $res['link'] == '/s/notallow') {
 			echo '请联系上传者！';
@@ -54,7 +54,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 		}
 		die();
 	}
-	$meta = getFileMeta($res['name'], $token, $res['cookie']);
+	$meta = getFileMetas($res['name']);
 	if ($meta === false) {
 		echo '<h1>文件不存在QuQ</h1>';
 		$mysql->exec('update watchlist set failed=3 where id='.$_SERVER['QUERY_STRING']);
@@ -67,9 +67,9 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 				echo '本文件只允许直链下载。<br /><br /><br />';
 			}
       if (!isset($enable_high_speed_link) || $enable_high_speed_link) {
-        $link2 = getHispeedDownloadLink($res['name'], $res['cookie']);
+        $link2 = getPremiumDownloadLink($res['name']);
       }
-			$link = getDownloadLink($res['name'], $token, $res['cookie']);
+			$link = getNormalDownloadLink($res['name']);
 			if ($link === false) {
 				echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
 				die();
@@ -107,7 +107,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			die();
 		}
 	}
-	$check=check_share($_SERVER['QUERY_STRING'], $res['link'], $res['name'], $res['cookie']);
+	$check=checkShare($_SERVER['QUERY_STRING'], $res['link'], $res['name']);
 	if(!$check['conn_valid']) {
 		echo '补档娘暂时无法访问百度。点击<a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">这里</a>尝试访问您要下载的文件。（提取码：'.$res['pass'].'）';
 		die();
@@ -172,7 +172,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 									return $e !== $current_md5;
 								});
 								$md5[] = $res['usermd5'][++$current_md5_key];
-								goto change_md5;
+								goto change_md5; //找时间销毁这个goto
 							}
 						} else {
 							wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档失败，错误代码：'.$json -> error_code, 2);
@@ -211,7 +211,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 				}
 				$mysql->prepare('update watchlist set name=? where id=?')->execute(array($newfullpath,$res['id']));
 			}
-			$result=createShare($res['fid'],$res['pass'],$token,$res['cookie']);
+			$result=share($res['fid'],$res['pass']);
 			if (!$result) {
 				echo '<h1>补档娘分享失败</h1>';
 				wlog('记录ID '.$_SERVER['QUERY_STRING'].'补档失败：分享失败', 2);
