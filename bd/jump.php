@@ -71,10 +71,8 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
       } else {
         echo '本文件只允许直链下载。<br /><br /><br />';
       }
-      if (!isset($enable_high_speed_link) || $enable_high_speed_link) {
-        $link2 = getPremiumDownloadLink($res['name']);
-      }
-      $link = getNormalDownloadLink($res['name']);
+      $link2 = getDownloadLinkDownload($res['name']); //getDownloadLinkLocatedownloadV40($res['name']);
+      $link = getDownloadLinkLocatedownloadV10($res['name']);
       if ($link === false) {
         echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
         die();
@@ -83,29 +81,25 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
       if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
         $mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
       }
-      //$link[] = $meta['info'][0]['dlink']; 这个地址可以不要了
+      
       if (isset($enable_direct_video_play) && $enable_direct_video_play) {
         $subname = substr($res['name'], strlen($res['name'])-3);
         if ($subname == 'mp4' || $subname == 'avi' || $subname == 'flv') {
           echo '本文件为视频，可以在线播放：<br />若无法播放，请刷新多试几次，因为百度的部分服务器不允许断点续传。<br /><video controls="controls" preload="none">';
+          echo '<source src="'.$link2.'" />';
+          echo '<source src="'.$meta['info'][0]['dlink'].'" />';
           foreach ($link as $v) {
             echo '<source src="'.$v.'" />';
           }
           echo '您的浏览器不支持video</video><br />';
         }
       }
-      if (isset($link2)) {
-        echo '下载地址：<br /><b>若无法下载，请尝试下方的地址。（据不完全统计，运行本程序的服务器和下载者的IP不在同一个国家的情况下会无法下载）<br />若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b>';
-        if (!isset($enable_high_speed_link)) {
-          echo '<br /><span style="color:red">警告：本功能的开关未配置。请在配置文件中添加 $enable_high_speed_link 项，设为true为启用，false为禁用。</span>';
-        }
-        foreach ($link2 as $k => $v) {
-          echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a></small><br />';
-        }
-        echo '<br />备用下载地址（基本确保可以下载）：';
-      } else {
-        echo '下载地址（有限速，如果可以，建议前往提取页使用百度干净云等工具进行下载。）：';
-      }
+      echo '<b>以下所有下载地址，若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b>';
+      echo '<br />高速下载地址（百度云管家接口）：<br />若下载速度慢，请刷新本页直到刷出另一个地址，然后再试。';
+      echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$link2.'">' . $link2 . '</a></small><br />';
+      echo '<br />下载地址（网页版接口）：<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。';
+      echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$meta['info'][0]['dlink'].'">' . $meta['info'][0]['dlink'] . '</a></small><br />';
+      echo '<br />备用下载地址（旧版云管家接口，限速）：';
       foreach ($link as $k => $v) {
         echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a></small><br />';
       }

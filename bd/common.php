@@ -131,11 +131,22 @@ function getFileMetas($file) {
   return $ret;
 }
 
-function getPremiumDownloadLink($file) {
+function getDownloadLinkDownload($file) {
+  $ret = request("http://d.pcs.baidu.com/rest/2.0/pcs/file?app_id=250528&method=download&check_blue=1&ec=1&path=".urlencode($file)."&err_ver=1.0&es=1&sup=1", NULL, false);
+  $json = json_decode($ret['body'], true);
+  if (!isset($json['error_code']) || $json['error_code'] != 302 || !isset($ret['header']['location'])) {
+    wlog('文件 '.$file.' 获取下载地址失败[API: download] '.$ret['body'], 2);
+    return false;
+  }
+  return $ret['header']['location'];
+}
+
+//下面的接口都被限速了
+function getDownloadLinkLocatedownloadV40($file) {
   $ret = request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&check_blue=1&es=1&esl=1&app_id=250528&path=".urlencode($file).'&ver=4.0&dtype=1&err_ver=1.0');
   $ret = json_decode($ret['body'], true);
   if (!isset($ret['urls'])) {
-    wlog('文件 '.$file.' 获取高速下载地址失败：'.json_encode($ret), 2);
+    wlog('文件 '.$file.' 获取下载地址失败[API: locatedownload 4.0] '.json_encode($ret), 2);
     return false;
   }
   return array_map(function ($e) {
@@ -143,12 +154,12 @@ function getPremiumDownloadLink($file) {
   }, $ret['urls']);
 }
 
-function getNormalDownloadLink($file) {
+function getDownloadLinkLocatedownloadV10($file) {
   global $bdstoken;
   $ret = request("http://pcs.baidu.com/rest/2.0/pcs/file?method=locatedownload&bdstoken=$bdstoken&app_id=250528&path=".urlencode($file));
   $ret = json_decode($ret['body'], true);
   if (isset($ret['errno'])) {
-    wlog('文件 '.$file.' 获取限速下载地址失败：'.$ret['errno'], 2);
+    wlog('文件 '.$file.' 获取下载地址失败[API: locatedownload 1.0] '.$ret['errno'], 2);
     return false;
   }
   foreach($ret['server'] as &$v) {

@@ -11,11 +11,10 @@ $ua='netdisk;4.6.1.0;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia';
 //后台显示的跳转地址
 $jumper = 'http://localhost/jump.php?';
 
-//高速下载链接的开关，这些链接只能供（和服务器IP是）同一个国家的IP使用
-$enable_high_speed_link = true;
-
 //直链功能的开关
 $enable_direct_link = true;
+
+//enable_high_speed_link选项已取消
 
 //直接播放视频功能的开关【跳转页需要使用HTTPS方可播放】
 $enable_direct_video_play = false;

@@ -52,7 +52,7 @@ function get_curl($url) {
 }
 
 $redirect_cnt = 0;
-function request($url, $postData=NULL) {
+function request($url, $postData=NULL, $followLocation = true) {
 	$curl = get_curl($url);
 	if ($postData !== NULL) {
 		curl_setopt($curl, CURLOPT_POST, true);
@@ -79,7 +79,7 @@ function request($url, $postData=NULL) {
 	$ret['code'] = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 	$ret['error'] = curl_error($curl);
   $ret['real_url'] = $url;
-  if (isset($ret['header']['location'])) {
+  if (isset($ret['header']['location']) && $followLocation) {
     global $redirect_cnt;
     $redirect_cnt += 1;
     if ($redirect_cnt > 10) {
