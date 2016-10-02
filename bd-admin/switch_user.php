@@ -104,6 +104,8 @@ else if (isset($_GET['add_user'])) {
         echo '<h1>请输入验证码</h1>';
       } else if ($result['errno'] == 6) {
         echo '<h1>验证码错误</h1>';
+      } else if ($result['errno'] == 120021) {
+        echo '<h1>请验证手机（在百度登录此账号，会提示验证）</h1>';
       } else {
         echo '<h1>错误编号：'.$result['errno'].'</h1>';
       }
