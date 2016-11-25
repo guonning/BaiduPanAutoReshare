@@ -87,7 +87,7 @@ else if (isset($_GET['add_user'])) {
       }
       if (!$result['errno']) {
         global $bduss;
-        $mysql->prepare('insert into users values (null,?,?,"") on duplicate key update cookie=?')->execute([$_POST['name'], get_cookie(), get_cookie()]);
+        $mysql->prepare('insert into users values (null,?,?,"") on duplicate key update cookie=?')->execute(array($_POST['name'], get_cookie(), get_cookie()));
         wlog('添加用户：'.$_POST['name']);
         $check = validateCookieAndGetBdstoken(); //应对百度的新登录机制
         if (!$check) { ?>

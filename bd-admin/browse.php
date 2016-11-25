@@ -28,7 +28,7 @@ if (isset($_GET['goup'])) {
 
 print_header('添加文件');
 if (!isset($_SESSION['folder']) || empty($_SESSION['folder']))
-	$_SESSION['folder'] = ['/'];
+	$_SESSION['folder'] = array('/');
 ?><h1>当前用户：<?=$username?> <a href="switch_user.php">切换</a></h1>
 <h2>当前路径：<?=end($_SESSION['folder'])?></h2><p>注意：本程序无法检测到全部可能导致出问题的情况。请在主页中查看全部补档记录的可用性。</p><table border="1"><tr><th>补档</th><th>工具</th><th>文件名</th><th>fs_id</th><th>状态</th><th>访问地址</th><th>分享地址</th></tr>
 <?php if (count($_SESSION['folder']) != 1) {
@@ -40,7 +40,9 @@ $table='';
 
 $fix = $mysql->prepare('update watchlist set name=? where fid=? and user_id=?');
 
-foreach ($filelist as &$v) {
+		function F0($e) { return strpos($e, $GLOBALS['ref_sv']['name'].'/') !== FALSE; }
+		function F1($e) { return strpos($GLOBALS['ref_sv']['name'], $e.'/'); }
+foreach ($filelist as $v) {
 	if (isset($list['list'][$v['fid']])) {
 		if ($list['list'][$v['fid']]['filename'] != $v['name']) {
 			$fix->execute(array($v['name'],$v['fid'],$uid));
@@ -52,14 +54,11 @@ foreach ($filelist as &$v) {
 		$check_result .= '<td><a href="'. $jumper.$list['list'][$v['fid']]['id'].'" target="_blank">'. $jumper.$list['list'][$v['fid']]['id'].'</a></td><td><a href="http://pan.baidu.com'.$list['list'][$v['fid']]['link'].'">http://pan.baidu.com'.$list['list'][$v['fid']]['link'].'</a></td>';
 		unset($list['list'][$v['fid']],$list['list_filenames'][$v['fid']]);
 	} else {
-    if (count(array_filter($list['list_filenames'], function ($e) use ($v) {
-      return strpos($e, $v['name'].'/') !== false;
-    }))) {
+		$GLOBALS['ref_sv'] = $v;
+    if (count(array_filter($list['list_filenames'], 'F0'))) {
       $check_result = '<td colspan="3"><font color="blue">文件夹内的文件被加入自动补档</font></td>';
 			$_SESSION['file_can_add'][$v['fid']] = false;
-		} elseif(count(array_filter($list['list_filenames'], function ($e) use ($v) {
-      return strpos($v['name'], $e.'/') !== false;
-    }))) {
+		} elseif(count(array_filter($list['list_filenames'], 'F1'))) {
 			$check_result = '<td colspan="3"><font color="blue">父文件夹被加入自动补档</font></td>';
 			$_SESSION['file_can_add'][$v['fid']] = false;
 		} else {
@@ -67,16 +66,16 @@ foreach ($filelist as &$v) {
 			$_SESSION['file_can_add'][$v['fid']] = true;
 		}
 	}
-	if ($_SESSION['file_can_add'][$v['fid']]) : ?>
+	if ($_SESSION['file_can_add'][$v['fid']]) { ?>
 	<tr><td><form method="post" action="add.php"><input type="hidden" name="fid" value="<?=$v['fid']?>" /><input type="hidden" name="filename" value="<?=$v['name']?>" /><input type="submit" name="submit" value="添加" /></form></td>
-	<?php else : ?>
+	<?php }else{ ?>
 	<tr><td><input type="button" disabled="disabled" value="已添加" /></td>
-<?php endif;
-	if($v['isdir']) : ?>
+	<?php }
+	if($v['isdir']) { ?>
 	<td><a href="tools/share.php?<?=$v['fid']?>" target="_blank">自定义分享</a></td><td><a href="browse.php?switch_dir=<?=urlencode($v['name'].'/') ?>"><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?>(文件夹)</a></td>
-	<?php else : ?>
+	<?php }else{ ?>
 	<td><a href="tools/dl.php?<?=rawurlencode($v['name'])?>" target="_blank">下载</a>&nbsp;&nbsp;<a href="tools/share.php?<?=$v['fid']?>" target="_blank">自定义分享</a></td><td><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?></td>
-	<?php endif; ?>
+	<?php } ?>
 	<td><?=$v['fid']?></td><?=$check_result?></tr>
 <?php } ?>
 </table>

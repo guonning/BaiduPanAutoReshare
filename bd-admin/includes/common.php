@@ -163,19 +163,19 @@ function login($username, $password, $codestring='', $captcha='') {
 
 function getFileList($folder) {
   global $bdstoken;
-  $list = [];
+  $list = array();
   $page = 1;
   $size = -1;
   while ($size) {
     $ret = request("http://pan.baidu.com/api/list?channel=chunlei&clienttype=0&web=1&num=1000&page=$page&dir=$folder&order=time&desc=1&showempty=0&bdstoken=$bdstoken&channel=chunlei&clienttype=0&web=1&app_id=250528");
     $ret = json_decode($ret['body'], true);
     if (!isset($ret['list'])) {
-      return [];
+      return array();
     }
     $size = count($ret['list']);
     $page++;
     foreach ($ret['list'] as $k => $v) {
-      $list[] = ['fid' => number_format($v['fs_id'], 0, '', ''), 'name' => $v['path'], 'isdir' => $v['isdir']];
+      $list[] = array('fid' => number_format($v['fs_id'], 0, '', ''), 'name' => $v['path'], 'isdir' => $v['isdir']);
     }
   }
   return $list;
@@ -205,13 +205,13 @@ function share($fid, $code, $show_result = false) {
 function getWatchlist() {
   global $mysql, $uid;
   $list = $mysql->query('select watchlist.* from watchlist left join users on watchlist.user_id=users.ID where watchlist.user_id='.$uid)->fetchAll();
-  $_list = [];
-  $list_filenames = [];
+  $_list = array();
+  $list_filenames = array();
   foreach($list as $k => $v) {
-    $_list[$v[1]] = ['id' => $v[0], 'filename' => $v[2], 'link' => $v[3]];
+    $_list[$v[1]] = array('id' => $v[0], 'filename' => $v[2], 'link' => $v[3]);
     $list_filenames[$v[1]] = $v[2];
   }
-  return ['list' => $_list, 'list_filenames' => $list_filenames];
+  return array('list' => $_list, 'list_filenames' => $list_filenames);
 }
 
 function getFileMetas($file) {
@@ -244,9 +244,8 @@ function getDownloadLinkLocatedownloadV40($file) {
     wlog('文件 '.$file.' 获取下载地址失败[API: locatedownload 4.0] '.json_encode($ret), 2);
     return false;
   }
-  return array_map(function ($e) {
-    return $e['url'];
-  }, $ret['urls']);
+  function F($e){ return $e['url']; }
+  return array_map('F', $ret['urls']);
 }
 
 function getDownloadLinkLocatedownloadV10($file) {

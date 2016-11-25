@@ -1,5 +1,5 @@
 <?php
-$cookie_jar = [];
+$cookie_jar = array();
 
 function set_cookie($cookie) {
   global $cookie_jar;
@@ -15,7 +15,7 @@ function set_cookie($cookie) {
 
 function get_cookie() {
   global $cookie_jar;
-  $ret = [];
+  $ret = array();
   foreach ($cookie_jar as $k => $v) {
     $ret[] = $k.'='.$v;
   }
@@ -33,9 +33,9 @@ function init_curl() {
     curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
     curl_setopt($curl, CURLOPT_HEADER, true);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    register_shutdown_function(function () use (&$curl) {
-      curl_close($curl);
-    });
+    $GLOBALS['ref_scurl'] = &$curl;
+    function SF() { curl_close($GLOBALS['ref_scurl']); }
+    register_shutdown_function('SF');
   }
 }
 
@@ -60,7 +60,7 @@ function request($url, $postData=NULL, $followLocation = true) {
 	}
   curl_setopt($curl, CURLOPT_COOKIE, get_cookie());
 	$response = curl_exec($curl);
-	$ret = ['header' => []];
+	$ret = array('header' => array());
 	$head_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
 	$headerRaw = explode("\r\n", substr($response, 0, $head_size));
 	array_shift($headerRaw);
