@@ -219,6 +219,40 @@ function share($fid, $code, $show_result = false) {
   }
   return $ret->shorturl;
 }
+function checkShare($id, $link, $name) {
+	global $mysql;
+	if(!$link || $link  == '/s/fakelink') {
+		$url='';
+		$ret['conn_valid']=true;
+		$ret['user_valid']=true;
+		$ret['valid']=false;
+	} else {
+		$url='http://pan.baidu.com'.$link;
+		$check=request($url);
+		if(strpos($check['body'],'你所访问的页面不存在了。')) {
+			$ret['conn_valid']=false;
+		}else if(strpos($check['body'],'涉及侵权、色情、反动、低俗')===false && strpos($check['body'],'分享的文件已经被')===false && $link) {
+			$ret['conn_valid']=true;
+			$ret['user_valid']=true;
+			$ret['valid']=true;
+			$context=json_decode(findBetween($check['body'],'var _context = ',';'),true);
+			$current_path=$context['file_list']['list'][0]['path'];
+			if($current_path!=$name && $context) { //自动修复错误的路径
+				$mysql->prepare('update watchlist set name=? where id=?')->execute(array($current_path,$id));
+				$name=$current_path;
+			}
+		}elseif(strpos($check['body'],'加密分享了文件')!==false) {
+			$ret['conn_valid']=true;
+			$ret['user_valid']=false;
+		} else {
+			$ret['conn_valid']=true;
+			$ret['user_valid']=true;
+			$ret['valid']=false;
+		}
+	}
+	$ret['url']=$url;
+	return $ret;
+}
 
 function getWatchlist() {
   global $mysql, $uid;

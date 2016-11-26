@@ -10,7 +10,6 @@ $sqls = array(
 	'CREATE TABLE `watchlist` (`id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT, `fid` tinytext COLLATE utf8_unicode_ci NOT NULL, `name` text COLLATE utf8_unicode_ci NOT NULL, `link` tinytext COLLATE utf8_unicode_ci NOT NULL, `count` int(11) NOT NULL, `pass` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL, `user_id` int(11) DEFAULT \'1\', `failed` tinyint(1) NOT NULL DEFAULT \'0\') ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci',
 	'CREATE TABLE `siteusers` (`ID` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT, `name` varchar(16) NOT NULL UNIQUE, `passwd` varchar(32) NOT NULL, `hash` varchar(32) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8',
 	'CREATE TABLE `block_list` (`ID` int(11) NOT NULL PRIMARY KEY, `block_list` LONGTEXT NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8'
-
 );
 session_start();
 header('Content-Type: text/html; charset=utf-8');
