@@ -1,6 +1,6 @@
 <?php
 require 'includes/common.php';
-
+loginRequired($_SERVER['PHP_SELF']);
 
 if (isset($_POST['delete'])) {
   $data = $mysql->query('select * from watchlist where id='.$_POST['delete'])->fetch();

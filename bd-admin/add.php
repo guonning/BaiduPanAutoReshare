@@ -1,8 +1,6 @@
 <?php
 require 'includes/common.php';
-
-
-session_start();
+loginRequired($_SERVER['PHP_SELF']);
 
 if(!isset($_SESSION['uid']) || !is_numeric($_SESSION['uid'])) {
 	header('Location: browse.php');

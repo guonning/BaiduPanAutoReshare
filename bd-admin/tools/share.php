@@ -1,6 +1,6 @@
 <?php
 require(dirname(__FILE__).'/../includes/common.php');
-session_start();
+loginRequired($_SERVER['PHP_SELF']);
 print_header('创建分享');
 
 if(!isset($_SESSION['uid']) || !is_numeric($_SESSION['uid'])) {

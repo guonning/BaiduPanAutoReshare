@@ -1,6 +1,6 @@
 <?php
 require 'includes/common.php';
-
+loginRequired($_SERVER['PHP_SELF']);
 
 print_header('添加记录');
 if(isset($_POST['submit'])) {

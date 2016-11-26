@@ -1,6 +1,6 @@
 <?php
 require(dirname(__FILE__).'/../includes/common.php');
-session_start();
+loginRequired($_SERVER['PHP_SELF']);
 print_header('下载文件');
 if (!isset($_SERVER['QUERY_STRING']) || !isset($_SESSION['uid'])) {
 	alert_error('找不到文件', false);

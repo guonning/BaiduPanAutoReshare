@@ -1,8 +1,6 @@
 <?php
 require 'includes/common.php';
-
-
-session_start();
+loginRequired($_SERVER['PHP_SELF']);
 
 if (isset($_GET['switch_user'])) {
   if (!is_numeric($_GET['switch_user'])) {

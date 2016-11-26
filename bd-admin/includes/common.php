@@ -32,16 +32,18 @@ function alert_error($error, $return) {
   die();
 }
 
-function print_header($title) { ?>
-<!DOCTYPE HTML>
+function print_header($title) {
+  global $head;
+  $head = TRUE;
+  header('Content-Type: text/html; charset=utf-8');
+  ?><!DOCTYPE HTML>
 <html>
 <head>
 <meta charset="utf-8" />
 <title><?php echo $title; ?></title>
 </head>
 <body>
-<?php global $head;
-  $head=true;
+<?php
 }
 require(dirname(__FILE__).'/mysql.php');
 
@@ -51,6 +53,25 @@ $bduss = false;
 $uid = false;
 $username = false;
 $md5 = false;
+
+function loginRequired($ref = 'index.php') {
+  global $mysql;
+  session_start();
+  $logedin = FALSE;
+  if (isset($_SESSION['siteuser_id']) and $_SESSION['siteuser_id']) {
+    $logedin = TRUE;
+  } elseif (isset($_COOKIE['siteuser_hash']) and isset($_COOKIE['siteuser_id'])) {
+    $siteuser = $mysql->query('SELECT * FROM `siteusers` WHERE ID='.intval($_COOKIE['siteuser_id']))->fetch();
+    if (!empty($siteuser) and $siteuser['hash'] === $_COOKIE['siteuser_hash']) {
+      $_SESSION['siteuser_id'] = intval($_COOKIE['siteuser_id']);
+      $logedin = TRUE;
+    }
+  }
+  if (!$logedin) {
+    header('Location: user.php?action=login&ref='.$ref);
+    exit;
+  }
+}
 
 function validateCookieAndGetBdstoken() {
   $token = request('http://pan.baidu.com/disk/home');
@@ -68,9 +89,6 @@ function loginFromDatabase($_uid) {
     return -1;
   }
   set_cookie($user['cookie']);
-  if (isset($user['bduss'])) { //删除数据库里的无用列
-    $mysql->query('ALTER TABLE `users` DROP `bduss`');
-  }
   global $cookie_jar, $bduss;
   if (!isset($cookie_jar['BDUSS'])) {
     return false;

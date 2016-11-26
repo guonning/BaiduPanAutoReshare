@@ -10,35 +10,15 @@
   <p>by 虹原翼</p>
   <p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">本程序已在GitHub上开源</a></p>
 <?php
-include_once('common.php');
+require_once 'includes/common.php';
 
 if (isset($_SERVER['QUERY_STRING']) && strpos($_SERVER['QUERY_STRING'], '&') !== false) {
   $_SERVER['QUERY_STRING'] = substr($_SERVER['QUERY_STRING'], 0, strpos($_SERVER['QUERY_STRING'], '&'));
 }
 if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
   $id=$_SERVER['QUERY_STRING'];
-  try {
-    $mysql=new PDO("mysql:host=$host;dbname=$db",$user,$pass);
-  }catch(PDOException $e) {
-    echo '<h1>错误：无法连接数据库</h1>';
-    die();
-  }
-  $mysql->query('set names utf8');
-  
   $res=$mysql->prepare('select watchlist.*,users.ID as uid,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
   $result=$res->execute(array($id));
-  if (!$result) {
-    $mysql->query('CREATE TABLE IF NOT EXISTS `block_list` (
-            `ID` int(11) NOT NULL,
-            `block_list` longtext NOT NULL,
-            PRIMARY KEY (`ID`)
-          ) DEFAULT CHARSET=utf8');
-    $mysql->exec('ALTER TABLE `users` ADD `newmd5` TEXT NOT NULL AFTER `md5`; ');
-    $mysql->exec('UPDATE `users` SET `newmd5` = if (`md5` = "", "", concat("[\"", `md5`, "\"]"))');
-    $mysql->exec('ALTER TABLE `users` DROP `md5` ;');
-    $res=$mysql->prepare('select watchlist.*,users.ID as uid,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
-    $res->execute(array($id));
-  }
   $res=$res->fetch();
   if(empty($res)) {
     echo '<h1>错误：找不到编号为'.$_SERVER['QUERY_STRING'].'的记录</h1>';
