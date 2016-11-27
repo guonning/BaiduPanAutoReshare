@@ -45,8 +45,8 @@ switch ($_REQUEST['action']) {
 					if (!isset($_POST['reg_code']) or $_POST['reg_code'] !== $registCode) $e_msg[] = '注册码不正确！';
 				}
 				if (!$e_msg) {
-					$mysql->query("SELECT * FROM `siteusers` WHERE `name`='${_POST['username']}'")->fetch();
-					if (!empty($mysql)) $e_msg[] = '相同的用户名已经存在';
+					$sr = $mysql->query("SELECT * FROM `siteusers` WHERE `name`='${_POST['username']}'")->fetch();
+					if (!empty($sr)) $e_msg[] = '相同的用户名已经存在';
 				}
 				if (!$e_msg) {
 					$userHash = md5($_POST['username'].time().mt_rand(0, 65535));
