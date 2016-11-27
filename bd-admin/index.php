@@ -9,7 +9,6 @@ if (isset($_POST['delete'])) {
     die();
   }
   $mysql->query('delete from watchlist where id='.$_POST['delete']);
-  $mysql->query('delete from block_list where id='.$_POST['delete']);
   wlog('删除记录：'.$_POST['delete'], 1);
   echo '{"ret":"删除成功！"}';
   die();

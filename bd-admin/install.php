@@ -1,16 +1,18 @@
 <?php
 $sqls = array(
+	'SET FOREIGN_KEY_CHECKS=0',
 	'DROP TABLE IF EXISTS `log_new`',
-	'DROP TABLE IF EXISTS `users`',
-	'DROP TABLE IF EXISTS `watchlist`',
-	'DROP TABLE IF EXISTS `siteusers`',
 	'DROP TABLE IF EXISTS `block_list`',
+	'DROP TABLE IF EXISTS `watchlist`',
+	'DROP TABLE IF EXISTS `users`',
+	'DROP TABLE IF EXISTS `siteusers`',
+	'SET FOREIGN_KEY_CHECKS=1',
 	'CREATE TABLE `siteusers` (
 		`ID` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
 		`name` VARCHAR(16) NOT NULL UNIQUE,
 		`passwd` VARCHAR(32) NOT NULL,
 		`hash` VARCHAR(32) NOT NULL
-		) ENGINE=MyISAM DEFAULT CHARSET=utf8',
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 	'CREATE TABLE `log_new` (
 		`ID` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
 		`IP` VARCHAR(15) NOT NULL,
@@ -25,7 +27,7 @@ $sqls = array(
 		`newmd5` TEXT NOT NULL,
 		INDEX (`siteu_id`),
 		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE
-		) ENGINE=MyISAM DEFAULT CHARSET=utf8',
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 	'CREATE TABLE `watchlist` (
 		`id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
 		`fid` TINYTEXT COLLATE utf8_unicode_ci NOT NULL,
@@ -40,12 +42,12 @@ $sqls = array(
 		INDEX (`siteu_id`),
 		FOREIGN KEY (`user_id`) REFERENCES `users` (`ID`) ON DELETE CASCADE,
 		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE
-		) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci',
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci',
 	'CREATE TABLE `block_list` (
 		`ID` int(11) NOT NULL PRIMARY KEY,
 		`block_list` LONGTEXT NOT NULL,
 		FOREIGN KEY (`ID`) REFERENCES `watchlist` (`ID`) ON DELETE CASCADE
-		) ENGINE=MyISAM DEFAULT CHARSET=utf8'
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8'
 );
 session_start();
 header('Content-Type: text/html; charset=utf-8');
@@ -60,7 +62,7 @@ $titles = array('安装说明', '输入数据库信息', '导入数据库表', '
 <html>
 <head>
 	<meta charset="utf-8" />
-	<title>安装：度娘盘分享守护程序<?php echo $title; ?></title>
+	<title>安装：度娘盘分享守护程序</title>
 </head>
 <body>
 <h1>Step <?=$_REQUEST['step']?>/4：<?=$titles[$_REQUEST['step']]?></h1>

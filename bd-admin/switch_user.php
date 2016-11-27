@@ -27,7 +27,6 @@ if (isset($_GET['switch_user'])) {
     } else {
       if (isset($_POST['confirm'])) {
         $mysql->query('delete from users where id='.$_POST['userId']);
-        $mysql->query('delete from watchlist where user_id='.$_POST['userId']);
         wlog('删除用户成功：['.$_POST['userId'].']'.$_POST['name'], 1);
         alert_error('用户【'.$_POST['name'].'】删除成功！', 'switch_user.php');
       } else {

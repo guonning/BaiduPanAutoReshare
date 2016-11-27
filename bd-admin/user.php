@@ -21,7 +21,7 @@ switch ($_REQUEST['action']) {
 		?>
 		<h1>度娘盘分享守护程序 - 登录</h1>
 		<form action="" method="post">
-			<?php if ($errInfo) {echo $errInfo,'<br />';} ?>
+			<?php if (isset($errInfo)) {echo $errInfo,'<br />';} ?>
 			用户名：<input type="text" name="username" /><br />
 			密码：<input type="password" name="password" /><br />
 			<input type="hidden" name="action" value="login" />
