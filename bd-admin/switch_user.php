@@ -89,7 +89,8 @@ if (isset($_GET['switch_user'])) {
       echo '<h1>错误：请输入Cookies</h1>';
     } else {
       set_cookie($_POST['login_cookie']);
-      $mysql->prepare('insert into users values (null,?,?,"") on duplicate key update cookie=?')->execute(array($_POST['name'], $_POST['login_cookie'], $_POST['login_cookie']));
+      $mysql->prepare('INSERT INTO `users` VALUES (NULL,?,?,?,"") ON DUPLICATE KEY UPDATE `cookie`=?')
+        ->execute(array($_SESSION['siteuser_id'], $_POST['name'], $_POST['login_cookie'], $_POST['login_cookie']));
       wlog('添加用户：'.$_POST['name']);
       $check = validateCookieAndGetBdstoken();
       if (!$check) { echo '<h1>访问百度云失败！Cookies可能已经失效。</h1>'; exit; }

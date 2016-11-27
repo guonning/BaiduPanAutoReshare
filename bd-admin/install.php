@@ -5,11 +5,47 @@ $sqls = array(
 	'DROP TABLE IF EXISTS `watchlist`',
 	'DROP TABLE IF EXISTS `siteusers`',
 	'DROP TABLE IF EXISTS `block_list`',
-	'CREATE TABLE `log_new` (`ID` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT, `IP` varchar(15) NOT NULL, `level` tinyint(4) NOT NULL, `content` text NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8',
-	'CREATE TABLE `users` (`ID` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT, `username` varchar(255) NOT NULL UNIQUE, `cookie` text NOT NULL, `newmd5` TEXT NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8',
-	'CREATE TABLE `watchlist` (`id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT, `fid` tinytext COLLATE utf8_unicode_ci NOT NULL, `name` text COLLATE utf8_unicode_ci NOT NULL, `link` tinytext COLLATE utf8_unicode_ci NOT NULL, `count` int(11) NOT NULL, `pass` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL, `user_id` int(11) DEFAULT \'1\', `failed` tinyint(1) NOT NULL DEFAULT \'0\') ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci',
-	'CREATE TABLE `siteusers` (`ID` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT, `name` varchar(16) NOT NULL UNIQUE, `passwd` varchar(32) NOT NULL, `hash` varchar(32) NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8',
-	'CREATE TABLE `block_list` (`ID` int(11) NOT NULL PRIMARY KEY, `block_list` LONGTEXT NOT NULL) ENGINE=MyISAM DEFAULT CHARSET=utf8'
+	'CREATE TABLE `siteusers` (
+		`ID` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+		`name` VARCHAR(16) NOT NULL UNIQUE,
+		`passwd` VARCHAR(32) NOT NULL,
+		`hash` VARCHAR(32) NOT NULL
+		) ENGINE=MyISAM DEFAULT CHARSET=utf8',
+	'CREATE TABLE `log_new` (
+		`ID` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+		`IP` VARCHAR(15) NOT NULL,
+		`level` TINYINT(4) NOT NULL,
+		`content` TEXT NOT NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8',
+	'CREATE TABLE `users` (
+		`ID` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+		`siteu_id` INT(11) NOT NULL,
+		`username` VARCHAR(255) NOT NULL UNIQUE,
+		`cookie` TEXT NOT NULL,
+		`newmd5` TEXT NOT NULL,
+		INDEX (`siteu_id`),
+		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE
+		) ENGINE=MyISAM DEFAULT CHARSET=utf8',
+	'CREATE TABLE `watchlist` (
+		`id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+		`fid` TINYTEXT COLLATE utf8_unicode_ci NOT NULL,
+		`name` TEXT COLLATE utf8_unicode_ci NOT NULL,
+		`link` TINYTEXT COLLATE utf8_unicode_ci NOT NULL,
+		`count` INT(11) NOT NULL,
+		`pass` VARCHAR(4) COLLATE utf8_unicode_ci DEFAULT NULL,
+		`user_id` INT(11) NOT NULL,
+		`siteu_id` INT(11) NOT NULL,
+		`failed` TINYINT(1) NOT NULL DEFAULT \'0\',
+		INDEX (`user_id`),
+		INDEX (`siteu_id`),
+		FOREIGN KEY (`user_id`) REFERENCES `users` (`ID`) ON DELETE CASCADE,
+		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE
+		) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci',
+	'CREATE TABLE `block_list` (
+		`ID` int(11) NOT NULL PRIMARY KEY,
+		`block_list` LONGTEXT NOT NULL,
+		FOREIGN KEY (`ID`) REFERENCES `watchlist` (`ID`) ON DELETE CASCADE
+		) ENGINE=MyISAM DEFAULT CHARSET=utf8'
 );
 session_start();
 header('Content-Type: text/html; charset=utf-8');
