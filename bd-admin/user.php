@@ -69,7 +69,7 @@ switch ($_REQUEST['action']) {
 			$mysql->query("UPDATE `siteusers` SET `hash`='$newUserHash' WHERE `ID`='${_SESSION['siteuser_id']}'");
 			unset($_COOKIE['siteuser_id']);
 			unset($_COOKIE['siteuser_hash']);
-			unset($_SESSION['siteuser_id']);
+			session_destroy();
 			print_header('登出成功');
 			?>
 			<p>您已登出</p>

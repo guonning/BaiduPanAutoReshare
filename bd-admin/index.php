@@ -3,7 +3,7 @@ require 'includes/common.php';
 loginRequired($_SERVER['PHP_SELF']);
 
 if (isset($_POST['delete'])) {
-  $data = $mysql->query('select * from watchlist where id='.$_POST['delete'])->fetch();
+  $data = $mysql->query('SELECT * FROM `watchlist` WHERE `id`='.$_POST['delete'].' AND `siteu_id`='.$_SESSION['siteuser_id'])->fetch();
   if (empty($data)) {
     echo '{"ret":"找不到要删除的记录！"}';
     die();
@@ -42,11 +42,26 @@ function dlt(id) {
 }
 </script>
 <h1>一键补档管理后台</h1>
-<h3><a href="addlink.php" target="_blank">添加记录</a>&nbsp;&nbsp;根据输入的链接和提取码添加记录。会自动获取所需的相关信息，但需要事先添加用户。<br /><a href="browse.php" target="_blank">浏览文件</a>&nbsp;&nbsp;浏览用户百度网盘中的文件，并可从中选择文件进行添加，添加用户的入口也在此页。可检出补档记录中绝大多数导致补档失败的问题。</h3>
+<h3>
+	<a href="addlink.php" target="_blank">添加记录</a>&nbsp;&nbsp;根据输入的链接和提取码添加记录。会自动获取所需的相关信息，但需要事先添加用户。<br />
+	<a href="browse.php" target="_blank">浏览文件</a>&nbsp;&nbsp;浏览用户百度网盘中的文件，并可从中选择文件进行添加，添加用户的入口也在此页。可检出补档记录中绝大多数导致补档失败的问题。
+</h3>
 <table border="1" id="TABLE">
-<tr><th width="10%">模式</th><th width="5%">ID</th><th width="10%">fs_id</th><th width="25%">文件名</th><th width="15%">访问地址</th><th width="5%">提取</th><th width="10%">百度用户名</th><th width="5%">补档次数</th><th width="5%">删除</th></tr>
+<tr>
+	<th width="10%">模式</th>
+	<th width="5%">ID</th>
+	<th width="10%">fs_id</th>
+	<th width="25%">文件名</th>
+	<th width="15%">访问地址</th>
+	<th width="5%">提取</th>
+	<th width="10%">百度用户名</th>
+	<th width="5%">补档次数</th>
+	<th width="5%">删除</th>
+</tr>
 <?php
-$list = $mysql->query('select watchlist.*,username,cookie from watchlist left join users on watchlist.user_id=users.ID order by watchlist.failed desc, watchlist.ID')->fetchAll();
+$list = $mysql->query('SELECT `watchlist`.*, `username`, `cookie` FROM `watchlist`
+	LEFT JOIN `users` ON `watchlist`.`user_id`=`users`.`ID`
+	WHERE `watchlist`.`siteu_id`=\''.$_SESSION['siteuser_id'].'\' ORDER BY `watchlist`.`failed` DESC, `watchlist`.`ID`')->fetchAll();
 
 foreach($list as $k=>$v) {
   echo '<tr id="ROW'.$v[0].'"><td>';

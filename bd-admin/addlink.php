@@ -45,7 +45,7 @@ if(isset($_POST['submit'])) {
 					foreach($fileinfo['file_list']['list'] as &$v) {
 						$v['fs_id']=number_format($v['fs_id'],0,'','');
 					}
-					$check_user=$mysql->query("select * from users where username='{$fileinfo['linkusername']}'")->fetch();
+					$check_user=$mysql->query("SELECT * FROM `users` WHERE `username`='{$fileinfo['linkusername']}' AND `siteu_id`='${_SESSION['siteuser_id']}'")->fetch();
 					if(empty($check_user)) {
 						echo '<h1>错误：用户【'.$fileinfo['linkusername'].'】未添加进数据库！</h1>';
 					} elseif (count($fileinfo['file_list']['list'])>1) {

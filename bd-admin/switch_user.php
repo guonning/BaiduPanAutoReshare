@@ -6,7 +6,7 @@ if (isset($_GET['switch_user'])) {
   if (!is_numeric($_GET['switch_user'])) {
     alert_error('用户ID错误', 'switch_user.php');
   }
-  $result = loginFromDatabase($_GET['switch_user']);
+  $result = loginFromDatabase($_GET['switch_user'], $_SESSION['siteuser_id']);
   if ($result === -1) {
     alert_error('找不到用户', 'switch_user.php');
   } else if ($result === false) {
@@ -21,7 +21,7 @@ if (isset($_GET['switch_user'])) {
   if (!is_numeric($_REQUEST['userId'])) {
     alert_error('用户ID错误','switch_user.php');
   } else {
-    $user = $mysql->query('select * from users where ID='.$_REQUEST['userId'])->fetch();
+    $user = $mysql->query('SELECT * FROM `users` WHERE `ID`='.$_REQUEST['userId'].' AND `siteu_id`='.$_SESSION['siteuser_id'])->fetch();
     if (empty($user)) {
       alert_error('找不到用户','switch_user.php');
     } else {
@@ -127,11 +127,11 @@ if (isset($_GET['switch_user'])) {
     <?php
     exit;
   }
-$users = $mysql->query('select * from users')->fetchAll();
+$users = $mysql->query('SELECT * FROM `users` WHERE `siteu_id`='.$_SESSION['siteuser_id'])->fetchAll();
 print_header('选择用户');
 echo '<h2>选择百度用户：</h2>';
 foreach ($users as $k => $v) {
-  echo '<a href="switch_user.php?switch_user='.$v['ID'].'">'.$v['username'].'</a>（<a href="switch_user.php?remove_user&userId='.$v['ID'].'">删除</a>）<br />';
+  echo '<a href="switch_user.php?switch_user='.$v['ID'].'">'.$v['username'].'</a>（<a href="switch_user.php?remove_user&amp;userId='.$v['ID'].'">删除</a>）<br />';
 }
 ?>
 <br /><a href="switch_user.php?add_user=1">添加用户/修复失效cookie</a>

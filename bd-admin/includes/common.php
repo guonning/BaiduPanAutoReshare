@@ -86,9 +86,10 @@ function validateCookieAndGetBdstoken() {
   return $bdstoken;
 }
 
-function loginFromDatabase($_uid) {
+function loginFromDatabase($_uid, $siteu_id = 0) {
   global $mysql;
-  $user = $mysql->query('select * from users where ID='.$_uid)->fetch();
+	if ($siteu_id) $user = $mysql->query('SELECT * FROM `users` WHERE `ID`='.$_uid.' AND `siteu_id`='.$siteu_id)->fetch();
+	else $user = $mysql->query('SELECT * FROM `users` WHERE `ID`='.$_uid)->fetch();
   if (!$user) {
     return -1;
   }
