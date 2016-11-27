@@ -49,10 +49,11 @@ $sqls = array(
 );
 session_start();
 header('Content-Type: text/html; charset=utf-8');
-if (!isset($_REQUEST['step'])) {
+$nocontinue = FALSE;
+$_REQUEST['step'] = isset($_REQUEST['step']) ? intval($_REQUEST['step']) : 0;
+if (file_exists('config.php')) {
+	$nocontinue = TRUE;
 	$_REQUEST['step'] = 0;
-} else {
-	$_REQUEST['step'] = intval($_REQUEST['step']);
 }
 $titles = array('安装说明', '输入数据库信息', '导入数据库表', '创建初始用户', '完成');
 ?><!DOCTYPE HTML>
@@ -84,7 +85,13 @@ switch ($_REQUEST['step']) {
 	case 0:
 		?>
 		<p>欢迎使用度娘盘分享守护程序，本安装引导程序将带领您完成本程序的初始化。</p>
-		<p><a href="install.php?step=1">下一步</p>
+		<p>
+			<?php if ($nocontinue) { ?>
+				在开始之前，请删除本目录下的config.php文件，然后刷新本页面。
+			<?php  } else { ?>
+				<a href="install.php?step=1">下一步</a>
+			<?php } ?>
+		</p>
 		<?php
 		break;
 	case 1:

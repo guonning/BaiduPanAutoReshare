@@ -1,5 +1,9 @@
 <?php
-require(dirname(__FILE__).'/../config.php');
+if (file_exists(dirname(__FILE__).'/../config.php')) require_once dirname(__FILE__).'/../config.php';
+else {
+	header('Location: install.php');
+	exit;
+}
 require(dirname(__FILE__).'/curl.php');
 
 function wlog($message, $level = 0) {
