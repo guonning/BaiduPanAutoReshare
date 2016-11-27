@@ -18,7 +18,9 @@ switch ($_REQUEST['action']) {
 			} else { $errInfo = '输入的用户名或密码不正确'; }
 		}
 		print_header('用户登录');
-		?><form action="" method="post">
+		?>
+		<h1>度娘盘分享守护程序 - 登录</h1>
+		<form action="" method="post">
 			<?php if ($errInfo) {echo $errInfo,'<br />';} ?>
 			用户名：<input type="text" name="username" /><br />
 			密码：<input type="password" name="password" /><br />
@@ -31,13 +33,52 @@ switch ($_REQUEST['action']) {
 		<?php
 		break;
 	case 'register':
+		print_header('管理员账号注册');
+		echo '<h1>度娘盘分享守护程序 - 管理员注册</h1>';
+		if ($registCode !== FALSE) {
+			$e_msg = array();
+			if (isset($_POST['username'])) {
+				if (!preg_match('/[0-9a-z]{3,16}/i', $_POST['username'])) $e_msg[] = '用户名必须是3~16位的数字和（或）字母组合';
+				if (!isset($_POST['password']) or strlen($_POST['password']) < 5) $e_msg[] = '密码长度必须大于5个字符';
+				elseif (!isset($_POST['password_c']) or $_POST['password'] !== $_POST['password_c']) $e_msg[] = '两次密码输入不匹配';
+				if ($registCode !== NULL) {
+					if (!isset($_POST['reg_code']) or $_POST['reg_code'] !== $registCode) $e_msg[] = '注册码不正确！';
+				}
+				if (!$e_msg) {
+					$mysql->query("SELECT * FROM `siteusers` WHERE `name`='${_POST['username']}'")->fetch();
+					if (!empty($mysql)) $e_msg[] = '相同的用户名已经存在';
+				}
+				if (!$e_msg) {
+					$userHash = md5($_POST['username'].time().mt_rand(0, 65535));
+					$mysql->prepare('INSERT INTO `siteusers` VALUES (NULL, ?, ?, ?)')
+						->execute(array($_POST['username'], md5($_POST['password']), $userHash));
+					$e_msg[] = '注册成功！<a href="user.php?action=login">前往登录</a>';
+				}
+			}
+			if ($e_msg) echo '<p>', implode('<br />', $e_msg), '</p>';
+			?>
+			<form action="" method="post">
+				<input type="hidden" name="action" value="register" />
+				用户名：<input type="text" name="username" /><br />
+				密码：<input type="password" name="password" /><br />
+				确认密码：<input type="password" name="password_c" /><br />
+				<?php if ($registCode !== NULL) { ?>注册码：<input type="text" name="reg_code" /><br /><?php } ?>
+				<input type="submit" value="注册" />
+			</form>
+			<?php
+		} else {
+			?>
+			<p>当前网站管理员不允许注册。</p>
+			<p>要变更此项配置，请编辑本目录下的config.php文件。</p>
+			<?php
+		}
 		break;
 	case 'profile':
 		loginRequired('user.php?action=profile');
 		$siteuser = $mysql->query("SELECT * FROM `siteusers` WHERE `ID`='${_SESSION['siteuser_id']}'")->fetch();
 		if (isset($_POST['update'])) {
 			if (isset($_POST['c_cp'])) {
-				if (strlen($_POST['c_np']) > 5 and $_POST['c_np'] === $_POST['c_cf']) {
+				if (strlen($_POST['c_np']) >= 5 and $_POST['c_np'] === $_POST['c_cf']) {
 					if (md5($_POST['c_cp']) === $siteuser['passwd']) {
 						$newPassHash = md5($_POST['c_np']);
 						$newUserHash = md5($siteuser['name'].time().mt_rand(0, 65535));

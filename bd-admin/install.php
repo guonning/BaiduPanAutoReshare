@@ -143,7 +143,7 @@ switch ($_REQUEST['step']) {
 		else {
 			if (isset($_POST['update'])) {
 				if (!isset($_POST['u_name']) or $_POST['u_name'] == '') reportError('用户名不能为空');
-				if (!isset($_POST['u_pass']) or $_POST['u_pass'] == '') reportError('用户密码不能为空');
+				if (!isset($_POST['u_pass']) or strlen($_POST['u_pass']) < 5) reportError('用户密码不能少于5个字符');
 				if (!isset($_POST['u_cfim']) or $_POST['u_pass'] !== $_POST['u_cfim']) reportError('两次密码输入不匹配');
 				if (!preg_match('/[0-9a-z]{3,16}/i', $_POST['u_name'])) reportError('用户名必须是3~16位的字母和（或）数字组合');
 				$userhash = md5($_POST['u_name'].time().mt_rand(0, 65535));
@@ -170,6 +170,7 @@ switch ($_REQUEST['step']) {
 	case 4:
 		$jumpath = dirname($_SERVER['PHP_SELF']);
 		if ($jumpath === '/') $jumpath = '';
+		$rc = md5(time().mt_rand(0, 65535));
 		$configFileContent = <<<EOT
 <?php
 \$host = '${_SESSION['db_host']}';
@@ -181,12 +182,15 @@ switch ($_REQUEST['step']) {
 \$enable_direct_link = TRUE;
 \$enable_direct_video_play = FALSE;
 \$force_direct_link = FALSE;
+\$registCode = '$rc';
 EOT;
 		file_put_contents('config.php', $configFileContent);
 		?>
 		<p>感谢您选择本程序！您的程序已经成功安装。</p>
 		<p>
 			如果一切顺利的话，您的网站现已可用。<br />
+			如果要添加新管理员用户，请使用下框内的“注册码”，到<a href="user.php?action=register">此页面</a>注册。<br />
+			<input type="text" value="<?=$rc?>"><br />
 			如果在使用中遇到什么问题，可以到<a href="https://github.com/slurin/BaiduPanAutoReshare/issue" target="_blank">Github</a>提出。<br />
 			本程序原作者 虹原翼 ，<a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">原Github地址</a>，经Slurin修改。
 		</p>
