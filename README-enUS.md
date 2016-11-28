@@ -19,25 +19,17 @@ So far, [Repository of Gentleman](http://galacg.me/) is using this sharing-repla
 
 ## Installation Guide：
 
-- Execute the ``install.sql`` on the database.
+- Upload all files in the folder ``bd-admin`` to your website's root directory.
 
-- Modify ``config.sample.php`` to configure the database and modify ``$jumper`` to the location of ``jump.php``. If necessary, follow the instructions to modify the additional configurations.
-
-- Copy ``config.sample.php`` to the directory ``bd`` and ``bd-admin`` respectively, and modify the name of it to ``config.php``.
-
-- Bind ``bd`` and ``bd-admin`` to different websites, and add a HTTP Authentication Sequence to the latter(because we didn't develop the administrators' login function).
-
-- Close``open_basedir``, and if your PHP version is 5.3, then close ``safe_mode``, too.
+- Set ``open_basedir`` ``NULL``, and set ``safe_mode`` ``off`` on PHP 5.3 and earlier.
 
 ## Updating Guide：
 
-- Replace files directly.
-
-- Access to any record that has been added to the replacement, and the database will be updated automatically.
+- You can not update from the official version to this fork yet, see wiki for more information.
 
 ## Operating Guide
 
-- Open the administrators' page and click "Browse Files" -> "Add User" to add the Baidu User that will be monitored. (WARNING: User account Cookie will be stored in the database unencrypted)
+- Open the administrators' page and click "Browse Files" -> "Add User" to add the Baidu User that will be monitored. (WARNING: User account's Cookie will be stored in the database unencrypted)
 
 - Add new file in the "Browse Files" or use "Add File" on the homepage to add the link that user have already shared. (It must be the shared-file that user have already added.)
 

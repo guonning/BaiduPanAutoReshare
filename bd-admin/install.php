@@ -191,12 +191,12 @@ EOT;
 		<p>感谢您选择本程序！您的程序已经成功安装。</p>
 		<p>
 			如果一切顺利的话，您的网站现已可用。<br />
-			如果要添加新管理员用户，请使用下框内的“注册码”，到<a href="user.php?action=register">此页面</a>注册。<br />
-			<input type="text" value="<?=$rc?>"><br />
+			如果要添加新管理员用户，请使用下框内的“注册码”，到<a href="user.php?action=register" target="_blank">此页面</a>注册。<br />
+			<input type="text" value="<?=$rc?>" size="32" /><br />
 			如果在使用中遇到什么问题，可以到<a href="https://github.com/slurin/BaiduPanAutoReshare/issue" target="_blank">Github</a>提出。<br />
 			本程序原作者 虹原翼 ，<a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">原Github地址</a>，经Slurin修改。
 		</p>
-		<p><a href="index.php">前往本工具地址</a></p>
+		<p><a href="index.php" target="_blank">前往本工具地址</a></p>
 		<?php
 		break;
 }

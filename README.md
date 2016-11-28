@@ -20,21 +20,15 @@ by 虹原翼
 
 ## 安装：
 
-- 导入install.sql
+- 上传 bd-admin 文件夹中的文件到你的网站根目录
 
-- 修改config.sample.php，指定数据库，修改$jumper指向jump.php所在地址。如有需要，可按说明修改其他选项
+- 使用浏览器打开你的网站对应的网址，按照提示完成安装。
 
-- 将config.sample.php分别复制到bd和bd-admin文件夹，文件名改为config.php
-
-- 将bd和bd-admin文件夹绑定不同的网站，为后者加上HTTP身份验证（因为我们没有做后台登录）
-
-- 关闭open_basedir，如果使用PHP5.3，关闭safe_mode
+- 关闭``open_basedir``，如果使用PHP5.3以下版本，关闭``safe_mode``
 
 ## 升级：
 
-- 直接覆盖文件
-
-- 访问任意已经添加的补档记录，会自动对数据库进行升级
+- 目前您并不能轻易地从官方版本升级到这个版本。详情请参阅Wiki。
 
 ## 使用方法
 
