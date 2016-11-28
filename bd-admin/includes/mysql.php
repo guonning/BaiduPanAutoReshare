@@ -1,8 +1,10 @@
 <?php
-try {
-	$mysql = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
-} catch(PDOException $e) {
-	print_header('出错了！');
-	echo '<h1>错误：无法连接数据库</h1>';
-}
-$mysql->query('set names utf8');
+require_once dirname(__FILE__).'/medoo.php';
+$database = new medoo(array(
+	'database_type' => 'mysql',
+	'database_name' => $db,
+	'server' => $host,
+	'username' => $user,
+	'password' => $pass,
+	'charset' => 'utf8'
+));

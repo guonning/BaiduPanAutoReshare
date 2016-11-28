@@ -21,12 +21,12 @@ if (isset($_GET['switch_user'])) {
   if (!is_numeric($_REQUEST['userId'])) {
     alert_error('用户ID错误','switch_user.php');
   } else {
-    $user = $mysql->query('SELECT * FROM `users` WHERE `ID`='.$_REQUEST['userId'].' AND `siteu_id`='.$_SESSION['siteuser_id'])->fetch();
+		$user = $database->get('users', 'username', array('AND' => array('ID' => $_REQUEST['userId'], 'siteu_id' => $_SESSION['siteuser_id'])));
     if (empty($user)) {
       alert_error('找不到用户','switch_user.php');
     } else {
       if (isset($_POST['confirm'])) {
-        $mysql->query('delete from users where id='.$_POST['userId']);
+				$database->delete('users', array('ID' => $_POST['userId']));
         wlog('删除用户成功：['.$_POST['userId'].']'.$_POST['name'], 1);
         alert_error('用户【'.$_POST['name'].'】删除成功！', 'switch_user.php');
       } else {
@@ -58,7 +58,10 @@ if (isset($_GET['switch_user'])) {
       }
       if (!$result['errno']) {
         global $bduss;
-        $mysql->prepare('insert into users values (null,?,?,"") on duplicate key update cookie=?')->execute(array($_POST['name'], get_cookie(), get_cookie()));
+				# medoo 不滋瓷原来的 INSERT ON DUPLICATE KEY 语法
+				if ($database->has('users', array('username' => $_POST['name'])))
+					$database->update('users', array('cookie' => get_cookie()), array('username' => $_POST['name'], 'siteu_id' => $_SESSION['siteuser_id']));
+				else $database->insert('users', array('username' => $_POST['name'], 'cookie' => get_cookie(), 'siteu_id' => $_SESSION['siteuser_id'], 'newmd5' => ''));
         wlog('添加用户：'.$_POST['name']);
         $check = validateCookieAndGetBdstoken(); //应对百度的新登录机制
         if (!$check) { ?>
@@ -88,8 +91,9 @@ if (isset($_GET['switch_user'])) {
       echo '<h1>错误：请输入Cookies</h1>';
     } else {
       set_cookie($_POST['login_cookie']);
-      $mysql->prepare('INSERT INTO `users` VALUES (NULL,?,?,?,"") ON DUPLICATE KEY UPDATE `cookie`=?')
-        ->execute(array($_SESSION['siteuser_id'], $_POST['name'], $_POST['login_cookie'], $_POST['login_cookie']));
+			if ($database->has('users', array('username' => $_POST['name'])))
+				$database->update('users', array('cookie' => $_POST['login_cookie']), array('username' => $_POST['name'], 'siteu_id' => $_SESSION['siteuser_id']));
+			else $database->insert('users', array('username' => $_POST['name'], 'cookie' => $_POST['login_cookie'], 'siteu_id' => $_SESSION['siteuser_id'], 'newmd5' => ''));
       wlog('添加用户：'.$_POST['name']);
       $check = validateCookieAndGetBdstoken();
       if (!$check) { echo '<h1>访问百度云失败！Cookies可能已经失效。</h1>'; exit; }
@@ -126,7 +130,7 @@ if (isset($_GET['switch_user'])) {
     <?php
     exit;
   }
-$users = $mysql->query('SELECT * FROM `users` WHERE `siteu_id`='.$_SESSION['siteuser_id'])->fetchAll();
+$users = $database->select('users', '*', array('siteu_id' => $_SESSION['siteuser_id']));
 print_header('选择用户');
 echo '<h2>选择百度用户：</h2>';
 foreach ($users as $k => $v) {

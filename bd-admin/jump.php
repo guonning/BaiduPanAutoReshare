@@ -6,9 +6,7 @@
   <title>度娘盘分享守护程序</title>
 </head>
 <body>
-  <h1>度娘盘分享守护程序</h1>
-  <p>by 虹原翼</p>
-  <p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">本程序已在GitHub上开源</a></p>
+	<h1>度娘盘分享守护程序 - 文件下载</h1>
 <?php
 require_once 'includes/common.php';
 
@@ -17,12 +15,14 @@ if (isset($_SERVER['QUERY_STRING']) && strpos($_SERVER['QUERY_STRING'], '&') !==
 }
 if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
   $id=$_SERVER['QUERY_STRING'];
-  $res=$mysql->prepare('select watchlist.*,users.ID as uid,newmd5 as usermd5, block_list from watchlist left join block_list on block_list.ID=watchlist.id left join users on users.ID=watchlist.user_id where watchlist.id=?');
-  $result=$res->execute(array($id));
-  $res=$res->fetch();
+	$res = $database->get('watchlist', array('[>]block_list' => array('id' => 'ID'), '[>]users' => array('user_id' => 'ID')),
+		array('watchlist.id', 'watchlist.fid', 'watchlist.name', 'watchlist.link',
+			'watchlist.pass', 'watchlist.count', 'watchlist.failed',
+			'users.ID (uid)', 'newmd5 (usermd5)', 'block_list'),
+		array('watchlist.id' => $id));
   if(empty($res)) {
     echo '<h1>错误：找不到编号为'.$_SERVER['QUERY_STRING'].'的记录</h1>';
-    die();
+    exit;
   }
   $login_test=loginFromDatabase($res['uid']);
   if ($login_test !== true) {
@@ -40,16 +40,17 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
   $meta = getFileMetas($res['name']);
   if ($meta === false) {
     echo '<h1>文件不存在QuQ</h1>';
-    $mysql->exec('update watchlist set failed=3 where id='.$_SERVER['QUERY_STRING']);
-    die();
+		$database->update('watchlist', array('failed' => 3), array('id' => $_SERVER['QUERY_STRING']));
+		exit;
   } else if ($force_direct_link || ($enable_direct_link && (!isset($_GET['nodirectdownload']) || $res['link'] == '/s/notallow'))) {
     if (isset($meta['info'][0]['dlink'])) {
+			echo '<h3>', htmlspecialchars(substr($res['name'], strrpos($res['name'], '/') + 1)), '</h3>';
       if ($force_direct_link) {
-        echo '由于管理员配置，当前全部文件只允许直链下载。<br /><br /><br />';
+				echo '由于管理员配置，当前全部文件只允许直链下载。<br /><br />';
       } else if ($res['link'] !== '/s/notallow') {
-        echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br /><br />';
+				echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br />';
       } else {
-        echo '本文件只允许直链下载。<br /><br /><br />';
+				echo '本文件只允许直链下载。<br /><br />';
       }
       $link2 = getDownloadLinkDownload($res['name']); //getDownloadLinkLocatedownloadV40($res['name']);
       $link = getDownloadLinkLocatedownloadV10($res['name']);
@@ -59,7 +60,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
       }
       //文件有效！如果没有保存分片信息，现在保存
       if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
-        $mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
+				$database->insert('block_list', array('ID' => $_SERVER['QUERY_STRING'], '(JSON) block_list' => $meta['info'][0]['block_list']));
       }
       
       if (isset($enable_direct_video_play) && $enable_direct_video_play) {
@@ -74,16 +75,20 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
           echo '您的浏览器不支持video</video><br />';
         }
       }
-      echo '<b>以下所有下载地址，若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b>';
-      echo '<br />高速下载地址（百度云管家接口）：<br />若下载速度慢，请刷新本页直到刷出另一个地址，然后再试。';
-      echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$link2.'">' . $link2 . '</a></small><br />';
-      echo '<br />下载地址（网页版接口）：<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。';
-      echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$meta['info'][0]['dlink'].'">' . $meta['info'][0]['dlink'] . '</a></small><br />';
-      echo '<br />备用下载地址（旧版云管家接口，限速）：';
-      foreach ($link as $k => $v) {
-        echo '<br /><small><a target="_blank" rel="noreferrer" href="'.$v.'">' . $v . '</a></small><br />';
-      }
-      die();
+			?>
+			<b>以下所有下载地址，若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b>
+			<br />高速下载地址（百度云管家接口）：<br />若下载速度慢，请刷新本页直到刷出另一个地址，然后再试。
+			<br /><small><a target="_blank" rel="noreferrer" href="<?=$link2?>"><?=$link2?></a></small><br />
+			<br />下载地址（网页版接口）：<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。
+			<br /><small><a target="_blank" rel="noreferrer" href="<?=$meta['info'][0]['dlink']?>"><?=$meta['info'][0]['dlink']?></a></small><br />
+			<br />备用下载地址（旧版云管家接口，限速）：
+			<?php foreach ($link as $k => $v) { ?>
+				<p><small><a target="_blank" rel="noreferrer" href="<?=$v?>"><?=$v?></a></small><p>
+			<?php } ?>
+			<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">度娘盘分享守护程序</a><br />by 虹原翼</p>
+			</body></html>
+			<?php
+			exit;
     }
   }
   $check=checkShare($_SERVER['QUERY_STRING'], $res['link'], $res['name']);
@@ -94,9 +99,9 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
     if($check['valid']) {
       //文件有效！如果没有保存分片信息，现在保存
       if (!$meta['info'][0]['isdir'] && $res['block_list'] == NULL && $meta['info'][0]['block_list']) {
-        $mysql->query("insert into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($meta['info'][0]['block_list'])."')");
+				$database->insert('block_list', array('ID' => $_SERVER['QUERY_STRING'], '(JSON) block_list' => $meta['info'][0]['block_list']));
       }
-      $mysql->exec('update watchlist set failed=0 where id='.$_SERVER['QUERY_STRING']); //之前不知道抽什么风莫名其妙标记温馨提示
+			$database->update('watchlist', array('failed' => 0), array('id' => $_SERVER['QUERY_STRING'])); //之前不知道抽什么风莫名其妙标记温馨提示
       echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。
         <script>window.onload=function(){window.location="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '"};</script>';
     } elseif(!$check['user_valid']) {
@@ -159,8 +164,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
           } else {
             $ret=request('http://pan.baidu.com/api/filemanager?channel=chunlei&clienttype=0&web=1&opera=delete&async=2&bdstoken='.$token.'&channel=chunlei&clienttype=0&web=1&app_id=250528',$ua,$res['cookie'],'filelist=%5B%22'.urlencode($res['name']).'%22%5D');
             $json->fs_id=number_format($json->fs_id,0,'','');
-            $mysql->prepare('update watchlist set name=?,fid=? where id=?')->execute(array($newfullpath,$json->fs_id,$res['id']));
-            $mysql->query("replace into block_list values({$_SERVER['QUERY_STRING']}, '".json_encode($md5)."')");
+						$database->update('watchlist', array('name' => $_SERVER['QUERY_STRING'], 'fid' => $json->fs_id), array('id' => $res['id']));
+						# medoo 不滋瓷 REPLACE INTO 语句
+						if (!$database->has('block_list', array('ID' => $_SERVER['QUERY_STRING'])))
+							$database->insert('block_list', array('ID' => $_SERVER['QUERY_STRING'], '(JSON) block_list' => $md5));
             $res['fid']=$json->fs_id;
             wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档成功');
             $need_rename = false;
@@ -185,17 +192,17 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
         if (isset($json -> errno) && $json -> errno !== 0) {
           echo '<h1>补档娘更名失败错误代码：'.$json -> errno.'</h1>';
           wlog('记录ID '.$_SERVER['QUERY_STRING'].'重命名失败', 2);
-          $mysql->exec('update watchlist set failed=1 where id='.$_SERVER['QUERY_STRING']);
-          die();
+					$database->update('watchlist', array('failed' => 1), array('id' => $_SERVER['QUERY_STRING']));
+					exit;
         }
-        $mysql->prepare('update watchlist set name=? where id=?')->execute(array($newfullpath,$res['id']));
+				$database->update('watchlist', array('name' => $newfullpath), array('id' => $res['id']));
       }
       $result=share($res['fid'],$res['pass']);
       if (!$result) {
         echo '<h1>补档娘分享失败</h1>';
         wlog('记录ID '.$_SERVER['QUERY_STRING'].'补档失败：分享失败', 2);
-        $mysql->exec('update watchlist set failed=1 where id='.$_SERVER['QUERY_STRING']);
-        die();
+				$database->update('watchlist', array('failed' => 1), array('id' => $_SERVER['QUERY_STRING']));
+				exit;
       }
       echo '<script>alert("您访问的文件已经失效，但是我们进行了自动补档，提取码不变。\n本文件已自动补档'
           . ($res['count'] + 1)
@@ -203,9 +210,9 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
           . $result .(($res['pass']!=='0')? ('#' . $res['pass']) :''). '";</script>';
       echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。';
       $result=substr($result,20);
-      $mysql->prepare('update watchlist set count=count+1,link=? where id=?')->execute(array($result,$res['id']));
+			$database->update('watchlist', array('count[+]' => 1, 'link' => $result), array('id' => $res['id']));
       wlog('记录ID '.$_SERVER['QUERY_STRING'].'补档成功');
-      $mysql->exec('update watchlist set failed=0 where id='.$_SERVER['QUERY_STRING']);
+			$database->update('watchlist', array('failed' => 0), array('id' => $_SERVER['QUERY_STRING']));
     }
   }
 } else { ?>

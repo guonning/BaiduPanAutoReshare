@@ -7,12 +7,12 @@ else {
 require(dirname(__FILE__).'/curl.php');
 
 function wlog($message, $level = 0) {
-  global $mysql;
+  global $database;
   if(getenv("HTTP_X_FORWARDED_FOR"))
     $ip = getenv("HTTP_X_FORWARDED_FOR");
   elseif(getenv("REMOTE_ADDR"))
     $ip = getenv("REMOTE_ADDR");
-  $mysql->prepare('insert into log_new value (null,?,?,?)')->execute(array($ip,$level,$message));
+  $database->insert('log_new', array('IP' => $ip, 'level' => $level, 'content' => $message));
 }
 
 function findBetween($str, $begin, $end) {
@@ -59,13 +59,13 @@ $username = false;
 $md5 = false;
 
 function loginRequired($ref = 'index.php') {
-  global $mysql;
+  global $database;
   session_start();
   $logedin = FALSE;
   if (isset($_SESSION['siteuser_id']) and $_SESSION['siteuser_id']) {
     $logedin = TRUE;
   } elseif (isset($_COOKIE['siteuser_hash']) and isset($_COOKIE['siteuser_id'])) {
-    $siteuser = $mysql->query('SELECT * FROM `siteusers` WHERE ID='.intval($_COOKIE['siteuser_id']))->fetch();
+		$siteuser = $database->get('siteusers', '*', array('ID' => intval($_COOKIE['siteuser_id'])));
     if (!empty($siteuser) and $siteuser['hash'] === $_COOKIE['siteuser_hash']) {
       $_SESSION['siteuser_id'] = intval($_COOKIE['siteuser_id']);
       $logedin = TRUE;
@@ -87,9 +87,9 @@ function validateCookieAndGetBdstoken() {
 }
 
 function loginFromDatabase($_uid, $siteu_id = 0) {
-  global $mysql;
-	if ($siteu_id) $user = $mysql->query('SELECT * FROM `users` WHERE `ID`='.$_uid.' AND `siteu_id`='.$siteu_id)->fetch();
-	else $user = $mysql->query('SELECT * FROM `users` WHERE `ID`='.$_uid)->fetch();
+  global $database;
+	if ($siteu_id) $user = $database->get('users', '*', array('AND' => array('ID' => $_uid, 'siteu_id' => $siteu_id)));
+	else $user = $database->get('users', '*', array('ID' => $_uid));
   if (!$user) {
     return -1;
   }
@@ -225,7 +225,7 @@ function share($fid, $code, $show_result = false) {
   return $ret->shorturl;
 }
 function checkShare($id, $link, $name) {
-	global $mysql;
+	global $database;
 	if(!$link || $link  == '/s/fakelink') {
 		$url='';
 		$ret['conn_valid']=true;
@@ -243,8 +243,8 @@ function checkShare($id, $link, $name) {
 			$context=json_decode(findBetween($check['body'],'var _context = ',';'),true);
 			$current_path=$context['file_list']['list'][0]['path'];
 			if($current_path!=$name && $context) { //自动修复错误的路径
-				$mysql->prepare('update watchlist set name=? where id=?')->execute(array($current_path,$id));
-				$name=$current_path;
+				$database->update('watchlist', array('name' => $current_path), array('id' => $id));
+				$name = $current_path;
 			}
 		}elseif(strpos($check['body'],'加密分享了文件')!==false) {
 			$ret['conn_valid']=true;
@@ -260,13 +260,13 @@ function checkShare($id, $link, $name) {
 }
 
 function getWatchlist() {
-  global $mysql, $uid;
-  $list = $mysql->query('select watchlist.* from watchlist left join users on watchlist.user_id=users.ID where watchlist.user_id='.$uid)->fetchAll();
+  global $database, $uid;
+	$list = $database->select('watchlist', array('[>]users' => array('watchlist.user_id' => 'ID')), array('watchlist.id', 'watchlist.fid', 'watchlist.name', 'watchlist.link'), array('watchlist.user_id' => $uid));
   $_list = array();
   $list_filenames = array();
   foreach($list as $k => $v) {
-    $_list[$v[1]] = array('id' => $v[0], 'filename' => $v[2], 'link' => $v[3]);
-    $list_filenames[$v[1]] = $v[2];
+    $_list[$v['fid']] = array('id' => $v['id'], 'filename' => $v['name'], 'link' => $v['link']);
+    $list_filenames[$v['fid']] = $v['name'];
   }
   return array('list' => $_list, 'list_filenames' => $list_filenames);
 }

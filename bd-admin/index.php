@@ -3,12 +3,12 @@ require 'includes/common.php';
 loginRequired($_SERVER['PHP_SELF']);
 
 if (isset($_POST['delete'])) {
-  $data = $mysql->query('SELECT * FROM `watchlist` WHERE `id`='.$_POST['delete'].' AND `siteu_id`='.$_SESSION['siteuser_id'])->fetch();
+	$data = $database->get('watchlist', '*', array('AND' => array('id' => $_POST['delete'], 'siteu_id' => $_SESSION['siteuser_id'])));
   if (empty($data)) {
     echo '{"ret":"找不到要删除的记录！"}';
     die();
   }
-  $mysql->query('delete from watchlist where id='.$_POST['delete']);
+	$database->delete('watchlist', array('id' => $_POST['delete']));
   wlog('删除记录：'.$_POST['delete'], 1);
   echo '{"ret":"删除成功！"}';
   die();
@@ -58,12 +58,14 @@ function dlt(id) {
 	<th width="5%">删除</th>
 </tr>
 <?php
-$list = $mysql->query('SELECT `watchlist`.*, `username`, `cookie` FROM `watchlist`
-	LEFT JOIN `users` ON `watchlist`.`user_id`=`users`.`ID`
-	WHERE `watchlist`.`siteu_id`=\''.$_SESSION['siteuser_id'].'\' ORDER BY `watchlist`.`failed` DESC, `watchlist`.`ID`')->fetchAll();
+$list = $database->select('watchlist', array('[>]users' => array('user_id' => 'ID')),
+	array('watchlist.id', 'watchlist.fid', 'watchlist.name',
+		'watchlist.link', 'watchlist.count', 'watchlist.pass', 'watchlist.user_id',
+		'watchlist.failed', 'username', 'cookie'),
+	array('watchlist.siteu_id' => $_SESSION['siteuser_id'], 'ORDER' => array('watchlist.failed' => 'DESC', 'watchlist.id')));
 
 foreach($list as $k=>$v) {
-  echo '<tr id="ROW'.$v[0].'"><td>';
+  echo '<tr id="ROW'.$v['id'].'"><td>';
   if ($v['failed'] == 1) {
     echo '<font color="red">补档失败，可能是网络问题，如果持续出现，请检查文件</font>';
   } else if ($v['failed'] == 2) {
@@ -73,8 +75,19 @@ foreach($list as $k=>$v) {
   } else {
     echo '<font color="green">自动补档保护中</font>';
   }
-  echo "</td><td>{$v[0]}</td><td>{$v[1]}</td><td>{$v[2]}</td><td><a href=\"$jumper{$v[0]}\"  target=\"_blank\">$jumper{$v[0]}</a></td><td>{$v[5]}</td><td>{$v['username']}</td><td>{$v[4]}</td><td><a href=\"javascript:;\" onclick=\"dlt({$v[0]});\">删除</a></td></tr>";
-  $id = $v[0];
+	?>
+	</td>
+	<td><?=$v['id']?></td>
+	<td><?=$v['fid']?></td>
+	<td><?=$v['name']?></td>
+	<td><a href="<?php echo $jumper, $v['id']; ?>"  target="_blank"><?php echo $jumper, $v['id']; ?></a></td>
+	<td><?=$v['pass']?></td>
+	<td><?=$v['username']?></td>
+	<td><?=$v['count']?></td>
+	<td><a href="javascript:;" onclick="dlt({$v['id']});">删除</a></td>
+	</tr>
+	<?php
+  $id = $v['id'];
 }
 ?>
 </table>

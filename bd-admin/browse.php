@@ -37,14 +37,12 @@ $filelist = getFileList(urlencode(end($_SESSION['folder'])));
 $list = getWatchlist();
 $table='';
 
-$fix = $mysql->prepare('update watchlist set name=? where fid=? and user_id=?');
-
 		function F0($e) { return strpos($e, $GLOBALS['ref_sv']['name'].'/') !== FALSE; }
 		function F1($e) { return strpos($GLOBALS['ref_sv']['name'], $e.'/'); }
 foreach ($filelist as $v) {
 	if (isset($list['list'][$v['fid']])) {
 		if ($list['list'][$v['fid']]['filename'] != $v['name']) {
-			$fix->execute(array($v['name'],$v['fid'],$uid));
+			$database->update('watchlist', array('name' => $v['name']), array('AND' => array('fid' => $v['fid'], 'user_id' => $uid)));
 			$check_result = '<td><font color="orange">数据库中的文件名错误，已经被自动修正。</font></td>';
 		} else {
 			$check_result = '<td><font color="green">自动补档保护中</font></td>';

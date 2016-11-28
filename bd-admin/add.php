@@ -19,9 +19,7 @@ if(!$_SESSION['file_can_add'][$_POST['fid']]) {
 	alert_error('本文件无法添加至自动补档，可能fs_id不存在，或者存在路径问题，或者已经添加过了。','browse.php');
 }
 if(isset($_POST['submit']) && $_POST['submit']=='提交') {
-	$test=$mysql->prepare('select * from watchlist where fid=? and name=? and user_id=?');
-	$test->execute(array($_POST['fid'],$_POST['filename'],$uid));
-	$test=$test->fetch();
+	$test = $database->get('watchlist', '*', array('AND' => array('fid' => $_POST['fid'], 'name' => $_POST['filename'], 'user_id' => $uid)));
 	$md5=getFileMetas($_POST['filename']);
 	if($_POST['code']=='') $_POST['code']='0';
 	if(!empty($test))
@@ -36,7 +34,8 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 		elseif (count($md5['info'][0]['block_list']) > 1)
 			echo '<h1>设置补档MD5：这个文件分片了，请上传小一些的文件（几个字节就可以了）</h1>';
 		else {
-			$current_md5 = json_decode($mysql->query('select newmd5 from users where id='.$_SESSION['uid'])->fetchColumn());
+			$current_md5 = $database->get('users', 'newmd5', array('id' => $_SESSION['uid']));
+			$current_md5 = json_decode($current_md5['newmd5']);
 			if (!is_array($current_md5)) {
 				$current_md5 = array();
 			}
@@ -44,7 +43,7 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 				echo '<h1>这个文件已经被设置成补档MD5了！<a href="browse.php">返回</a></h1>';
 			} else {
 				$current_md5[] = $md5['info'][0]['block_list'][0];
-				$mysql->prepare('update users set newmd5=? where id=?')->execute(array(json_encode($current_md5),$_SESSION['uid']));
+				$database->update('users', array('(JSON) newmd5' => $current_md5), array('ID' => $_SESSION['uid']));
 				$md5 = json_encode($current_md5);
 				echo '<h1>设置补档MD5成功！此文件可以移动、更名，但切勿删除！<a href="browse.php">返回</a></h1>';
 			}
@@ -76,9 +75,12 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 			echo '<h1>错误：地址输入有误。</h1>';
 		}
 		if($_POST['link']) {
-			$mysql->prepare('INSERT INTO `watchlist` VALUES (NULL,?,?,?,0,?,?,?,0)')
-				->execute(array($_POST['fid'],$_POST['filename'],$_POST['link'],$_POST['code'],$uid,$_SESSION['siteuser_id']));
-			$id = $mysql->lastInsertId();
+			$id = $database->insert('watchlist', array(
+				'fid' => $_POST['fid'], 'name' => $_POST['filename'],
+				'link' => $_POST['link'], 'count' => 0,
+				'pass' => $_POST['code'], 'user_id' => $uid,
+				'siteu_id' => $_SESSION['siteuser_id'], 'failed' => 0
+			));
 			wlog('在文件浏览页添加记录：用户名：'.$username.'，文件完整路径：'.$_POST['filename'].'，文件fs_id：'.$_POST['fid'].'，文件访问地址为：'. $jumper.$id);
 			echo '<h1>添加成功！文件访问地址为：<a href="'. $jumper.$id.'" target="_blank">'. $jumper.$id.'</a><br />';
 			echo '<a href="browse.php">返回</a></h1>';
@@ -86,14 +88,19 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 		}
 	}
 }
-$test=$mysql->prepare('select * from watchlist where fid=? and name=? and user_id=?');
-$test->execute(array($_POST['fid'],$_POST['filename'],$uid));
-$test=$test->fetch();
+$test = $database->get('watchlist', '*', array('AND' => array('fid' => $_POST['fid'], 'name' => $_POST['filename'], 'user_id' => $uid)));
 if(!empty($test)) {
-	echo "<p>这个文件已经添加过啦！<br />文件名：{$test[2]}<br />访问地址：<a href=\"$jumper".$test[0]."\" target=\"_blank\">$jumper".$test[0]."</a><br />分享地址：<a href=\"http://pan.baidu.com{$test[3]}\"  target=\"_blank\">http://pan.baidu.com{$test[3]}</a><br />提取码：{$test[5]}<br />补档次数：{$test['count']}<br />百度用户名：$username<br /><a href=\"browse.php\">返回</a></p></body></html>";
-	die();
+	?>
+	<p>
+		这个文件已经添加过啦！<br />文件名：<?=$test['name']?><br />
+		访问地址：<a href="<?=$jumper?><?=$test['id']?>" target="_blank"><?=$jumper?><?=$test['id']?></a><br />
+		分享地址：<a href="http://pan.baidu.com<?=$test['link']?>"  target="_blank">http://pan.baidu.com<?=$test['link']?></a><br />
+		提取码：<?=$test['pass']?><br />补档次数：<?=$test['count']?><br />百度用户名：<?=$username?><br />
+		<a href="browse.php">返回</a>
+	</p></body></html>
+	<?php
+	exit;
 }
-
 echo "<h2>您将添加文件：{$_POST['filename']}（fs_id：{$_POST['fid']}）至 $username 的自动补档列表中。</h2>";
 ?>
 <form method="post" action="add.php">

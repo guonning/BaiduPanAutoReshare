@@ -45,7 +45,7 @@ if(isset($_POST['submit'])) {
 					foreach($fileinfo['file_list']['list'] as &$v) {
 						$v['fs_id']=number_format($v['fs_id'],0,'','');
 					}
-					$check_user=$mysql->query("SELECT * FROM `users` WHERE `username`='{$fileinfo['linkusername']}' AND `siteu_id`='${_SESSION['siteuser_id']}'")->fetch();
+					$check_user = $database->get('users', '*', array('AND' => array('username' => $fileinfo['linkusername'], 'siteu_id' => $_SESSION['siteuser_id'])));
 					if(empty($check_user)) {
 						echo '<h1>错误：用户【'.$fileinfo['linkusername'].'】未添加进数据库！</h1>';
 					} elseif (count($fileinfo['file_list']['list'])>1) {
@@ -53,13 +53,17 @@ if(isset($_POST['submit'])) {
 					} else {
 						 if($check_user['newmd5']=='')
 							echo '<font color="red"><b>因为没有设置MD5，无法启用换MD5补档模式。</b>请在“浏览文件”模式添加一个小文件（几字节即可），并在添加时输入提取码为“md5”。</font><br />';
-						$check_file=$mysql->query("select * from watchlist where fid='{$fileinfo['file_list']['list'][0]['fs_id']}'")->fetch();
+						$check_file = $database->get('watchlist', '*', array('fid' => $fileinfo['file_list']['list'][0]['fs_id']));
 						if(!empty($check_file)) {
-							echo '<h1>错误：此文件已添加过，地址是：<a href="'. $jumper.$check_file[0].'" target="_blank">'. $jumper.$check_file[0].'</a></h1>';
+							echo '<h1>错误：此文件已添加过，地址是：<a href="'. $jumper.$check_file['id'].'" target="_blank">'. $jumper.$check_file['id'].'</a></h1>';
 						} else {
-							$mysql->prepare('INSERT INTO `watchlist` VALUES (NULL,?,?,?,0,?,?,?,0)')
-								->execute(array($fileinfo['file_list']['list'][0]['fs_id'],$fileinfo['file_list']['list'][0]['path'],$_POST['link'],$_POST['code'],$check_user['ID'],$_SESSION['siteuser_id']));
-							$id = $mysql->lastInsertId();
+							$id = $database->insert('watchlist', array(
+								'fid' => $fileinfo['file_list']['list'][0]['fs_id'],
+								'name' => $fileinfo['file_list']['list'][0]['path'],
+								'link' => $_POST['link'], 'count' => 0,
+								'pass' => $_POST['code'], 'user_id' => $check_user['ID'],
+								'siteu_id' => $_SESSION['siteuser_id']
+								));
 							//这里因为没读block_list需要的相关内容，暂时先不写入block_list，第一次访问会自动写入
 							wlog('添加链接记录：用户名：'.$fileinfo['linkusername'].'，文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'，文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'，文件访问地址为：'. $jumper.$id);
 							echo '<h1>添加成功！<br />用户名：'.$fileinfo['linkusername'].'<br />文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'<br />文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'<br />文件访问地址为：<a href="'. $jumper.$id.'" target="_blank">'. $jumper.$id.'</a></h1>';

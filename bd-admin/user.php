@@ -7,7 +7,7 @@ switch ($_REQUEST['action']) {
 	case 'login':
 		if (isset($_POST['username']) and isset($_POST['password'])) {
 			$password = md5($_POST['password']);
-			$siteuser = $mysql->query("SELECT * FROM `siteusers` WHERE `name`='${_POST['username']}' AND `passwd`='$password'")->fetch();
+			$siteuser = $database->get('siteusers', '*', array('AND' => array('name' => $_POST['username'], 'passwd' => $password)));
 			if (!empty($siteuser)) {
 				$_SESSION['siteuser_id'] = $siteuser['ID'];
 				setcookie('siteuser_id', $siteuser['ID'], time() + 15552000);
@@ -45,13 +45,11 @@ switch ($_REQUEST['action']) {
 					if (!isset($_POST['reg_code']) or $_POST['reg_code'] !== $registCode) $e_msg[] = '注册码不正确！';
 				}
 				if (!$e_msg) {
-					$sr = $mysql->query("SELECT * FROM `siteusers` WHERE `name`='${_POST['username']}'")->fetch();
-					if (!empty($sr)) $e_msg[] = '相同的用户名已经存在';
+					if ($database->has('siteusers', array('name' => $_POST['username']))) $e_msg[] = '相同的用户名已经存在';
 				}
 				if (!$e_msg) {
 					$userHash = md5($_POST['username'].time().mt_rand(0, 65535));
-					$mysql->prepare('INSERT INTO `siteusers` VALUES (NULL, ?, ?, ?)')
-						->execute(array($_POST['username'], md5($_POST['password']), $userHash));
+					$database->insert('siteusers', array('name' => $_POST['username'], 'passwd' => md5($_POST['password']), 'hash' => $userHash));
 					$e_msg[] = '注册成功！<a href="user.php?action=login">前往登录</a>';
 				}
 			}
@@ -75,14 +73,14 @@ switch ($_REQUEST['action']) {
 		break;
 	case 'profile':
 		loginRequired('user.php?action=profile');
-		$siteuser = $mysql->query("SELECT * FROM `siteusers` WHERE `ID`='${_SESSION['siteuser_id']}'")->fetch();
+		$database->get('siteusers', '*', array('ID' => $_SESSION['siteuser_id']));
 		if (isset($_POST['update'])) {
 			if (isset($_POST['c_cp'])) {
 				if (strlen($_POST['c_np']) >= 5 and $_POST['c_np'] === $_POST['c_cf']) {
 					if (md5($_POST['c_cp']) === $siteuser['passwd']) {
 						$newPassHash = md5($_POST['c_np']);
 						$newUserHash = md5($siteuser['name'].time().mt_rand(0, 65535));
-						$mysql->query("UPDATE `siteusers` SET `passwd`='$newPassHash', `hash`='$newUserHash' WHERE `ID`='${_SESSION['siteuser_id']}'");
+						$database->update('siteusers', array('passwd' => $newPassHash, 'hash' => $newUserHash), array('ID' => $_SESSION['siteuser_id']));
 					} else $msg = '密码错误！';
 				} else {
 					$msg = '密码长度不够或两次输入密码不匹配！';
@@ -107,7 +105,7 @@ switch ($_REQUEST['action']) {
 		loginRequired();
 		if (isset($_POST['confirm'])) {
 			$newUserHash = md5($_COOKIE['siteuser_hash'].time().mt_rand(0, 65535));
-			$mysql->query("UPDATE `siteusers` SET `hash`='$newUserHash' WHERE `ID`='${_SESSION['siteuser_id']}'");
+			$database->update('siteusers', array('hash' => $newUserHash), array('ID' => $_SESSION['siteuser_id']));
 			unset($_COOKIE['siteuser_id']);
 			unset($_COOKIE['siteuser_hash']);
 			session_destroy();
