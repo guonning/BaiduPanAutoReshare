@@ -31,13 +31,18 @@ if (isset($_GET['switch_user'])) {
         alert_error('用户【'.$_POST['name'].'】删除成功！', 'switch_user.php');
       } else {
         print_header('确认删除'); ?>
-        <h1>确定要删除用户 <?=$user['username']?> 吗？<br />警告：删除用户将同时删除此用户的全部补档记录。</h1>
-        <form method="post" action="">
+				<div class="container">
+        <h1 class="page-header">删除用户</h1>
+				<div class="panel panel-danger">
+				<div class="panel panel-heading"><h3 class="panel-title">确定要删除用户“<?=$user['username']?>”？</h3></div>
+				<div class="panel panel-body">
+				<p>警告：删除用户将同时删除此用户的全部补档记录。<br />确认要继续吗？</p>
+				<p><form method="post" action="">
           <input type="hidden" name="remove_user" value="1" />
           <input type="hidden" name="userId" value="<?=$_REQUEST['userId']?>" />
           <input type="hidden" name="name" value="<?=$user['username']?>" />
-          <input type="submit" name="confirm" value="确认删除" />
-        </form>
+          <input class="btn btn-danger" type="submit" name="confirm" value="确认删除" />
+				</form></p></div></div></body></html>
         <?php
         exit;
       }
@@ -100,42 +105,61 @@ if (isset($_GET['switch_user'])) {
       alert_error('用户【'.$_POST['name'].'】添加成功！', 'switch_user.php');
       }
     }
-    ?><h1>添加用户</h1>
+    ?>
+		<div class="container">
+		<h1 class="page-header">添加用户</h1>
+		<div class="panel panel-primary">
+		<div class="panel-heading"><h3 class="panel-title">使用百度账号密码</h3></div>
     <form method="post" action="switch_user.php?add_user=1">
-    用户名：<input type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>"/><br />
-    密码：<input type="password" name="password" /><br />
+		<div class="panel-body"><p>
+		用户名：
+		<input class="form-control" style="max-width: 330px;" type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>"/>
+		密码：<input class="form-control" style="max-width: 330px;" type="password" name="password" />
     <?php if (isset($result['code_string'])) { ?>
-    验证码：<input type="text" name="captcha" /><img src="<?php echo $result['captcha']; ?>" /><br />
+		验证码：<input class="form-control" style="max-width: 330px;" type="text" name="captcha" /><img src="<?php echo $result['captcha']; ?>" />
     <input type="hidden" name="code_string" value="<?php echo $result['code_string']; ?>" />
     <?php } ?>
-    <input type="submit" name="create_user" value="登录" />
-    </form>
-    <form method="post" action="switch_user.php?add_user=1">
-    <h3>使用Cookie登录账号</h3>
-    <p>
-      使用Cookies登录需要您提取您的浏览器中的部分Cookies内容。<br />
-      现在，请使用您的浏览器打开一个隐私窗口（Chrome浏览器快捷键Ctrl + Shift + N；Firefox快捷键Ctrl + Shift + P）。<br />
-      访问网址<a href="https://pan.baidu.com/" target="_blank">https:pan.baidu.com</a>。然后登录您的百度账号。<br />
-      在浏览器菜单中找到“查看元素”打开开发者工具（快捷键F12）。<br />
-      在开发者工具中找到“网络”选项卡，按F5刷新页面，找到一个指向域名pan.baidu.com的请求并复制请求头中的Cookie列<br />
-      将您刚才复制的内容粘贴在下面的文本框内：<br />
-      一个可用的Cookie中必定包含项：BAIDUID、BDUSS、STOKEN、PANPSC 4项值。<br />
-      <textarea name="login_cookie" rows="5"></textarea><br />
-      用户名：<input type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>" /><br />
-      <input type="submit" name="create_cookie" value="提交" />
-    </p>
-    <a href="switch_user.php">返回</a>
-    </form>
+		<br /><input class="btn btn-primary" type="submit" name="create_user" value="登录" />
+		</form></p></div></div>
+		<div class="panel panel-default">
+		<div class="panel-heading"><h3 class="panel-title">使用Cookie登录账号</h3></div>
+		<div class="panel-body">
+			<p>
+				使用Cookies登录需要您提取您的浏览器中的部分Cookies内容。<br />
+				现在，请使用您的浏览器打开一个隐私窗口（Chrome浏览器快捷键Ctrl + Shift + N；Firefox快捷键Ctrl + Shift + P）。<br />
+				访问网址<a href="https://pan.baidu.com/" target="_blank">https:pan.baidu.com</a>。然后登录您的百度账号。<br />
+				在浏览器菜单中找到“查看元素”打开开发者工具（快捷键F12）。<br />
+				在开发者工具中找到“网络”选项卡，按F5刷新页面，找到一个指向域名pan.baidu.com的请求并复制请求头中的Cookie列<br />
+				将您刚才复制的内容粘贴在下面的文本框内。<br />
+				一个可用的Cookie中必定包含项：BAIDUID、BDUSS、STOKEN、PANPSC 4项值。
+			</p><p>
+			<form method="post" action="switch_user.php?add_user=1">
+			用户名：<input class="form-control" style="max-width: 330px;" type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>" />
+			Cookies：<textarea class="form-control" name="login_cookie" rows="5" style="width: 330px;"></textarea><br />
+			<input class="btn btn-primary" type="submit" name="create_cookie" value="提交" />
+			</form></p>
+		</div></div>
+		<p><a href="switch_user.php">返回</a></p>
     </body></html>
     <?php
     exit;
   }
 $users = $database->select('users', '*', array('siteu_id' => $_SESSION['siteuser_id']));
 print_header('选择用户');
-echo '<h2>选择百度用户：</h2>';
+?>
+<div class="container">
+<h1 class="page-header">选择百度用户</h1>
+<div class="list-group">
+<?php
 foreach ($users as $k => $v) {
-  echo '<a href="switch_user.php?switch_user='.$v['ID'].'">'.$v['username'].'</a>（<a href="switch_user.php?remove_user&amp;userId='.$v['ID'].'">删除</a>）<br />';
+	?>
+	<span class="list-group-item">
+	<a class="label label-primary" href="switch_user.php?switch_user=<?php echo $v['ID']; ?>"><?php echo $v['username']; ?></a>
+	<a class="label label-danger" href="switch_user.php?remove_user&amp;userId=<?php echo $v['ID']; ?>">删除用户</a>
+	</span>
+	<?php
 }
 ?>
-<br /><a href="switch_user.php?add_user=1">添加用户/修复失效cookie</a>
-</body></html>
+</div>
+<p><a href="switch_user.php?add_user=1">添加用户/修复失效cookie</a></p>
+</div></body></html>
