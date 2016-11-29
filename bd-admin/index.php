@@ -39,14 +39,14 @@ function dlt(id) {
     xmlHttp.send('delete=' + id);
   }
 }
-</script>
-<h1>一键补档管理后台</h1>
-<h3>
-	<a href="addlink.php" target="_blank">添加记录</a>&nbsp;&nbsp;根据输入的链接和提取码添加记录。会自动获取所需的相关信息，但需要事先添加用户。<br />
-	<a href="browse.php" target="_blank">浏览文件</a>&nbsp;&nbsp;浏览用户百度网盘中的文件，并可从中选择文件进行添加，添加用户的入口也在此页。可检出补档记录中绝大多数导致补档失败的问题。
-</h3>
-<table border="1" id="TABLE">
-<tr>
+</script><div class="container">
+<h1 class="page-header">一键补档管理后台</h1>
+<ul class="nav nav-pills">
+	<li><a href="addlink.php" target="_blank">添加记录</a></li>
+	<li><a href="browse.php" target="_blank">浏览文件</a></li>
+</ul>
+<table class="table table-striped" id="TABLE">
+<thead><tr>
 	<th width="10%">模式</th>
 	<th width="5%">ID</th>
 	<th width="10%">fs_id</th>
@@ -56,7 +56,7 @@ function dlt(id) {
 	<th width="10%">百度用户名</th>
 	<th width="5%">补档次数</th>
 	<th width="5%">删除</th>
-</tr>
+</tr></thead><tbody>
 <?php
 $list = $database->select('watchlist', array('[>]users' => array('user_id' => 'ID')),
 	array('watchlist.id', 'watchlist.fid', 'watchlist.name',
@@ -84,11 +84,11 @@ foreach($list as $k=>$v) {
 	<td><?=$v['pass']?></td>
 	<td><?=$v['username']?></td>
 	<td><?=$v['count']?></td>
-	<td><a href="javascript:;" onclick="dlt({$v['id']});">删除</a></td>
+	<td><button class="btn btn-danger" onclick="dlt(<?php echo $v['id']; ?>);">删除</button></td>
 	</tr>
 	<?php
   $id = $v['id'];
 }
 ?>
-</table>
-</body></html>
+</tbody></table>
+</div></body></html>
