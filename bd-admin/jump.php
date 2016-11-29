@@ -85,10 +85,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 				<a rel="noreferrer" href="<?php echo htmlspecialchars($meta['info'][0]['dlink']); ?>">下载地址（网页版接口）</a>
 				<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。
 			</p>
-			<p>
+			<div>
 				备用下载地址（旧版云管家接口，限速）：
 				<ul><?php foreach ($link as $k => $v) { ?><li><a rel="noreferrer" href="<?php echo htmlspecialchars($v); ?>"><?php echo parse_url($v, PHP_URL_HOST);?></a></li><?php } ?></ul>
-			</p>
+			</div>
 			<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">度娘盘分享守护程序</a><br />by 虹原翼</p>
 			</body></html>
 			<?php
