@@ -73,7 +73,7 @@ switch ($_REQUEST['action']) {
 		break;
 	case 'profile':
 		loginRequired('user.php?action=profile');
-		$database->get('siteusers', '*', array('ID' => $_SESSION['siteuser_id']));
+		$siteuser = $database->get('siteusers', '*', array('ID' => $_SESSION['siteuser_id']));
 		if (isset($_POST['update'])) {
 			if (isset($_POST['c_cp'])) {
 				if (strlen($_POST['c_np']) >= 5 and $_POST['c_np'] === $_POST['c_cf']) {

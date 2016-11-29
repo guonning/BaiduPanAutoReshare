@@ -92,9 +92,9 @@ $test = $database->get('watchlist', '*', array('AND' => array('fid' => $_POST['f
 if(!empty($test)) {
 	?>
 	<p>
-		这个文件已经添加过啦！<br />文件名：<?=$test['name']?><br />
+		这个文件已经添加过啦！<br />文件名：<?php echo htmlspecialchars($test['name']); ?><br />
 		访问地址：<a href="<?=$jumper?><?=$test['id']?>" target="_blank"><?=$jumper?><?=$test['id']?></a><br />
-		分享地址：<a href="http://pan.baidu.com<?=$test['link']?>"  target="_blank">http://pan.baidu.com<?=$test['link']?></a><br />
+		分享地址：<a href="http://pan.baidu.com<?php echo htmlspecialchars($test['link']); ?>"  target="_blank">http://pan.baidu.com<?php echo htmlspecialchars($test['link']); ?></a><br />
 		提取码：<?=$test['pass']?><br />补档次数：<?=$test['count']?><br />百度用户名：<?=$username?><br />
 		<a href="browse.php">返回</a>
 	</p></body></html>
@@ -104,8 +104,8 @@ if(!empty($test)) {
 echo "<h2>您将添加文件：{$_POST['filename']}（fs_id：{$_POST['fid']}）至 $username 的自动补档列表中。</h2>";
 ?>
 <form method="post" action="add.php">
-<input type="hidden" name="fid" value="<?php echo $_POST['fid'] ?>" />
-<input type="hidden" name="filename" value="<?php echo $_POST['filename'] ?>" />
+<input type="hidden" name="fid" value="<?php echo $_POST['fid']; ?>" />
+<input type="hidden" name="filename" value="<?php echo htmlspecialchars($_POST['filename']); ?>" />
 已建好的分享链接（若未分享请留空）：<input type="text" name="link" /><br />
 提取码（4位，公开分享请留空）：<input type="text" name="code" /><br />*用作连接补档请输入"md5"<br /><br />
 分享选项（如果添加的是文件夹，本项会被无视）：<br />

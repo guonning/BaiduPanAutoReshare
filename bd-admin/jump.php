@@ -30,7 +30,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
     if ($res['link'] == '/s/fakelink' || $res['link'] == '/s/notallow') {
       echo '请联系上传者！';
     } else {
-      echo '请尝试直接<a href="http://pan.baidu.com'.$res['link'].'">访问分享页</a>（提取密码：' . $res['pass'] . '）';
+      echo '请尝试直接<a href="http://pan.baidu.com', htmlspecialchars($res['link']), '">访问分享页</a>（提取密码：', $res['pass'], '）';
     }
     die();
   }
@@ -46,45 +46,49 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
     if (isset($meta['info'][0]['dlink'])) {
 			echo '<h3>', htmlspecialchars(substr($res['name'], strrpos($res['name'], '/') + 1)), '</h3>';
       if ($force_direct_link) {
-				echo '由于管理员配置，当前全部文件只允许直链下载。<br /><br />';
+				echo '<p>由于管理员配置，当前全部文件只允许直链下载。</p>';
       } else if ($res['link'] !== '/s/notallow') {
-				echo '若要转存文件，<a href="jump.php?' . $id . '&nodirectdownload=1">前往提取页</a> （提取密码：' . $res['pass'] . '）<br /><br />';
+				echo '<p>若要转存文件，<a href="jump.php?', $id, '&amp;nodirectdownload=1">前往提取页</a> （提取密码：', $res['pass'], '）</p>';
       } else {
-				echo '本文件只允许直链下载。<br /><br />';
+				echo '<p>本文件只允许直链下载。</p>';
       }
       $link2 = getDownloadLinkDownload($res['name']); //getDownloadLinkLocatedownloadV40($res['name']);
-      $link = getDownloadLinkLocatedownloadV10($res['name']);
+			$link = array_unique(getDownloadLinkLocatedownloadV10($res['name']));
       if ($link === false) {
         echo '这个视频文件被温馨提示掉了，请点击上方的“前往提取页”尝试进行修复。若显示“本文件只允许直链下载”，请联系分享者。';
         die();
       }
       //文件有效！如果没有保存分片信息，现在保存
-      if ($res['block_list'] == NULL && $meta['info'][0]['block_list']) {
+      if ($res['block_list'] == NULL && $meta['info'][0]['block_list'])
 				$database->insert('block_list', array('ID' => $_SERVER['QUERY_STRING'], '(JSON) block_list' => $meta['info'][0]['block_list']));
-      }
-      
+
       if (isset($enable_direct_video_play) && $enable_direct_video_play) {
         $subname = substr($res['name'], strlen($res['name'])-3);
         if ($subname == 'mp4' || $subname == 'avi' || $subname == 'flv') {
-          echo '本文件为视频，可以在线播放：<br />若无法播放，请刷新多试几次，因为百度的部分服务器不允许断点续传。<br /><video controls="controls" preload="none">';
-          echo '<source src="'.$link2.'" />';
-          echo '<source src="'.$meta['info'][0]['dlink'].'" />';
-          foreach ($link as $v) {
-            echo '<source src="'.$v.'" />';
-          }
-          echo '您的浏览器不支持video</video><br />';
+					?>
+					本文件为视频，可以在线播放：<br />若无法播放，请刷新多试几次，因为百度的部分服务器不允许断点续传。<br />
+					<video controls="controls" preload="none">
+					<source src="<?php echo htmlspecialchars($link2); ?>" />
+					<source src="<?php echo htmlspecialchars($meta['info'][0]['dlink']); ?>" />
+					<?php foreach ($link as $v) echo '<source src="', htmlspecialchars($v), '" />'; ?>
+					您的浏览器不支持video</video><br />
+					<?php
         }
       }
 			?>
-			<b>以下所有下载地址，若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b>
-			<br />高速下载地址（百度云管家接口）：<br />若下载速度慢，请刷新本页直到刷出另一个地址，然后再试。
-			<br /><small><a target="_blank" rel="noreferrer" href="<?=$link2?>"><?=$link2?></a></small><br />
-			<br />下载地址（网页版接口）：<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。
-			<br /><small><a target="_blank" rel="noreferrer" href="<?=$meta['info'][0]['dlink']?>"><?=$meta['info'][0]['dlink']?></a></small><br />
-			<br />备用下载地址（旧版云管家接口，限速）：
-			<?php foreach ($link as $k => $v) { ?>
-				<p><small><a target="_blank" rel="noreferrer" href="<?=$v?>"><?=$v?></a></small><p>
-			<?php } ?>
+			<p><b>以下所有下载地址，若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b></p>
+			<p>
+				<a rel="noreferrer" href="<?php echo htmlspecialchars($link2); ?>">高速下载地址（百度云管家接口）</a>
+				<br />若下载速度慢，请刷新本页直到刷出另一个地址，然后再试。
+			</p>
+			<p>
+				<a rel="noreferrer" href="<?php echo htmlspecialchars($meta['info'][0]['dlink']); ?>">下载地址（网页版接口）</a>
+				<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。
+			</p>
+			<p>
+				备用下载地址（旧版云管家接口，限速）：
+				<ul><?php foreach ($link as $k => $v) { ?><li><a rel="noreferrer" href="<?php echo htmlspecialchars($v); ?>"><?php echo parse_url($v, PHP_URL_HOST);?></a></li><?php } ?></ul>
+			</p>
 			<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">度娘盘分享守护程序</a><br />by 虹原翼</p>
 			</body></html>
 			<?php
@@ -102,8 +106,10 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 				$database->insert('block_list', array('ID' => $_SERVER['QUERY_STRING'], '(JSON) block_list' => $meta['info'][0]['block_list']));
       }
 			$database->update('watchlist', array('failed' => 0), array('id' => $_SERVER['QUERY_STRING'])); //之前不知道抽什么风莫名其妙标记温馨提示
-      echo '若没有自动跳转, <a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">点我手动跳转</a>。
-        <script>window.onload=function(){window.location="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '"};</script>';
+			?>
+			若没有自动跳转, <a href="<?php echo htmlspecialchars($check['url']), (($res['pass']==='0')? '' :('#'.$res['pass'])); ?>">点我手动跳转</a>。
+			<script>window.onload=function(){window.location="<?php echo $check['url'], (($res['pass']==='0')? '' :('#'.$res['pass'])); ?>";};</script>
+			<?php
     } elseif(!$check['user_valid']) {
       echo '<h1>用户登录失效</h1>';
       wlog('记录ID '.$_SERVER['QUERY_STRING'].'在补档时登录信息失效', 2);
