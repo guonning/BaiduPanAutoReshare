@@ -67,10 +67,12 @@ if(isset($_POST['submit'])) {
 							//这里因为没读block_list需要的相关内容，暂时先不写入block_list，第一次访问会自动写入
 							wlog('添加链接记录：用户名：'.$fileinfo['linkusername'].'，文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'，文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'，文件访问地址为：'. $jumper.$id);
 							?>
-							<h1>添加成功！<br />用户名：<?php echo $fileinfo['linkusername']; ?>
+							<div class="container">
+							<div class="alert alert-success">添加成功！<br />用户名：<?php echo $fileinfo['linkusername']; ?>
 							<br />文件完整路径：<?php echo htmlspecialchars($fileinfo['file_list']['list'][0]['path']); ?>
 							<br />文件fs_id：<?php echo $fileinfo['file_list']['list'][0]['fs_id']; ?>
-							<br />文件访问地址为：<a href="<?php echo $jumper, $id; ?>" target="_blank"><?php echo $jumper, $id; ?></a></h1>
+							<br />文件访问地址为：<a href="<?php echo $jumper, $id; ?>" target="_blank"><?php echo $jumper, $id; ?></a></div>
+							</div>
 							<?php
 						}
 					}
@@ -80,22 +82,26 @@ if(isset($_POST['submit'])) {
 	}
 }
 ?>
-<h1>添加要补档的文件</h1>
+<div class="container">
+<h1 class="page-header">添加要补档的文件</h1>
 <form method="post" action="addlink.php">
-请输入分享链接，分享必须由已添加的用户创建：<input type="text" name="link" /><br />
+请输入分享链接，分享必须由已添加的用户创建：
+<input class="form-control" type="text" name="link" style="max-width: 330px;" />
 要添加用户，请在主页中选择“浏览文件”，在出现的“选择用户”页面中添加。<br />
-请输入提取码，公开分享不用输入：<input type="text" name="code" /><br />
+请输入提取码，公开分享不用输入：
+<input class="form-control" type="text" name="code" style="max-width: 330px;" />
 现在换MD5补档模式为全局启用状态，所有文件强制换MD5补档。请不要添加txt等在结尾连接内容后影响使用的格式！<br />
 <?php
 if(isset($need_vcode)) {
-	echo '请输入验证码：<input type="text" name="verify" />';
+	echo '请输入验证码：<input class="form-control" type="text" name="verify" style="max-width: 330px;" />';
 	$vcode=request("http://pan.baidu.com/share/captchaip?web=1&t=0&$share_info&channel=chunlei&clienttype=0&web=1");
 	$vcode=json_decode($vcode['body']);
 	if($vcode->errno)
 		echo '获取验证码出现错误<br />';
 	else
-		echo '<img src="'.$vcode->captcha.'" /><br />';
+		echo '<img src="', $vcode->captcha, '" /><br />';
 }
 ?>
-<input type="submit" name="submit" value="添加" />
-</form></body></html>
+<input class="btn btn-primary" type="submit" name="submit" value="添加" />
+</form></div>
+</body></html>

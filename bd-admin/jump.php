@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <style>body{font-family:'Microsoft YaHei UI','Microsoft JHengHei UI',sans-serif}</style>
-  <meta charset="UTF-8">
+	<meta charset="utf-8">
   <title>度娘盘分享守护程序</title>
+	<link href="https://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body>
-	<h1>度娘盘分享守护程序 - 文件下载</h1>
+<body class="container">
+	<h1 class="page-header">度娘盘分享守护程序 - 文件下载</h1>
 <?php
 require_once 'includes/common.php';
 
@@ -21,36 +21,40 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			'users.ID (uid)', 'newmd5 (usermd5)', 'block_list'),
 		array('watchlist.id' => $id));
   if(empty($res)) {
-    echo '<h1>错误：找不到编号为'.$_SERVER['QUERY_STRING'].'的记录</h1>';
+    echo '<div class="alert alert-danger">错误：找不到编号为'.$_SERVER['QUERY_STRING'].'的记录</div>';
     exit;
   }
   $login_test=loginFromDatabase($res['uid']);
   if ($login_test !== true) {
-    echo '<h1>由于cookie失效，无法进行补档，';
+    echo '<div class="alert alert-danger">由于cookie失效，无法进行补档，';
     if ($res['link'] == '/s/fakelink' || $res['link'] == '/s/notallow') {
       echo '请联系上传者！';
     } else {
       echo '请尝试直接<a href="http://pan.baidu.com', htmlspecialchars($res['link']), '">访问分享页</a>（提取密码：', $res['pass'], '）';
     }
-    die();
+    die('</div>');
   }
   if (!isset($force_direct_link)) {
     $force_direct_link = false;
   }
   $meta = getFileMetas($res['name']);
   if ($meta === false) {
-    echo '<h1>文件不存在QuQ</h1>';
+    echo '<div class="alert alert-danger">文件不存在QuQ</div>';
 		$database->update('watchlist', array('failed' => 3), array('id' => $_SERVER['QUERY_STRING']));
 		exit;
   } else if ($force_direct_link || ($enable_direct_link && (!isset($_GET['nodirectdownload']) || $res['link'] == '/s/notallow'))) {
     if (isset($meta['info'][0]['dlink'])) {
-			echo '<h3>', htmlspecialchars(substr($res['name'], strrpos($res['name'], '/') + 1)), '</h3>';
+			?>
+			<div class="panel panel-default">
+			<div class="panel-heading"><h3 class="panel-title"><?php echo htmlspecialchars(substr($res['name'], strrpos($res['name'], '/') + 1)); ?></h3></div>
+			<div class="panel-body">
+			<?php
       if ($force_direct_link) {
-				echo '<p>由于管理员配置，当前全部文件只允许直链下载。</p>';
+				echo '<div class="alert alert-info">由于管理员配置，当前全部文件只允许直链下载。</div>';
       } else if ($res['link'] !== '/s/notallow') {
-				echo '<p>若要转存文件，<a href="jump.php?', $id, '&amp;nodirectdownload=1">前往提取页</a> （提取密码：', $res['pass'], '）</p>';
+				echo '<div class="well">若要转存文件，<a href="jump.php?', $id, '&amp;nodirectdownload=1">前往提取页</a> （提取密码：', $res['pass'], '）</div>';
       } else {
-				echo '<p>本文件只允许直链下载。</p>';
+				echo '<div class="alert alert-info">本文件只允许直链下载。</div>';
       }
       $link2 = getDownloadLinkDownload($res['name']); //getDownloadLinkLocatedownloadV40($res['name']);
 			$link = array_unique(getDownloadLinkLocatedownloadV10($res['name']));
@@ -88,8 +92,8 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			<div>
 				备用下载地址（旧版云管家接口，限速）：
 				<ul><?php foreach ($link as $k => $v) { ?><li><a rel="noreferrer" href="<?php echo htmlspecialchars($v); ?>"><?php echo parse_url($v, PHP_URL_HOST);?></a></li><?php } ?></ul>
-			</div>
-			<p><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">度娘盘分享守护程序</a><br />by 虹原翼</p>
+			</div></div></div>
+			<p><small><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">度娘盘分享守护程序</a><br />by 虹原翼</small></p>
 			</body></html>
 			<?php
 			exit;
@@ -97,8 +101,9 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
   }
   $check=checkShare($_SERVER['QUERY_STRING'], $res['link'], $res['name']);
   if(!$check['conn_valid']) {
-    echo '补档娘暂时无法访问百度。点击<a href="' . $check['url'] .(($res['pass']!=='0')? ('#' .$res['pass']) :''). '">这里</a>尝试访问您要下载的文件。（提取码：'.$res['pass'].'）';
-    die();
+		echo '<div class="alert alert-warning">补档娘暂时无法访问百度。点击<a href="', $check['url'], (($res['pass']!=='0')? ('#' .$res['pass']) :''),
+			'">这里</a>尝试访问您要下载的文件。（提取码：', $res['pass'], '）</div>';
+    exit;
   } else {
     if($check['valid']) {
       //文件有效！如果没有保存分片信息，现在保存
@@ -137,7 +142,8 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
         $md5[] = $current_md5;
         if (count($md5) < 1024) {
           change_md5:
-          $ret=request('http://pcs.baidu.com/rest/2.0/pcs/file?method=createsuperfile&app_id=250528&path='.$newfullpath.'&ondup=overwrite',$ua,$res['cookie'],'param='.json_encode(array('block_list'=>$md5)));
+          $ret=request('http://pcs.baidu.com/rest/2.0/pcs/file?method=createsuperfile&app_id=250528&path='.$newfullpath.'&ondup=overwrite',
+						$ua,$res['cookie'],'param='.json_encode(array('block_list'=>$md5)));
           $json=json_decode($ret['body']);
           if (isset($json -> error_code) && $json -> error_code !== 0) {
             //如果没有启用直链功能，在这里检测是不是温馨提示
@@ -168,7 +174,8 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
               wlog('记录ID '.$_SERVER['QUERY_STRING'].'换MD5补档失败，错误代码：'.$json -> error_code, 2);
             }
           } else {
-            $ret=request('http://pan.baidu.com/api/filemanager?channel=chunlei&clienttype=0&web=1&opera=delete&async=2&bdstoken='.$token.'&channel=chunlei&clienttype=0&web=1&app_id=250528',$ua,$res['cookie'],'filelist=%5B%22'.urlencode($res['name']).'%22%5D');
+            $ret=request('http://pan.baidu.com/api/filemanager?channel=chunlei&clienttype=0&web=1&opera=delete&async=2&bdstoken='.$token.'&channel=chunlei&clienttype=0&web=1&app_id=250528',
+							$ua,$res['cookie'],'filelist=%5B%22'.urlencode($res['name']).'%22%5D');
             $json->fs_id=number_format($json->fs_id,0,'','');
 						$database->update('watchlist', array('name' => $_SERVER['QUERY_STRING'], 'fid' => $json->fs_id), array('id' => $res['id']));
 						# medoo 不滋瓷 REPLACE INTO 语句
@@ -222,7 +229,7 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
     }
   }
 } else { ?>
-  <h2>未指定要提取的文件！</h2>
+  <div class="alert alert-danger">未指定要提取的文件！</div>
 <?php } ?>
 </body>
 </html>
