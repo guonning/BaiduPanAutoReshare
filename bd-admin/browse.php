@@ -80,7 +80,7 @@ foreach ($filelist as $v) {
 	<?php }
 	if($v['isdir']) { ?>
 	<td><a class="btn btn-sm btn-default" href="tools/share.php?<?=$v['fid']?>" target="_blank">自定义分享</a></td>
-	<td><a href="browse.php?switch_dir=<?=urlencode($v['name'].'/') ?>"><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?>&lt;文件夹&gt;</a></td>
+	<td><a href="browse.php?switch_dir=<?=urlencode($v['name'].'/') ?>"><?=substr($v['name'],strlen(end($_SESSION['folder']))) ?></a></td>
 	<?php }else{ ?>
 	<td><a class="btn btn-sm btn-default" href="tools/dl.php?<?=rawurlencode($v['name'])?>" target="_blank">下载</a>&nbsp;
 	<a class="btn btn-sm btn-default" href="tools/share.php?<?=$v['fid']?>" target="_blank">自定义分享</a></td>

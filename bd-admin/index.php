@@ -80,7 +80,7 @@ foreach($list as $k=>$v) {
 	<td><?=$v['id']?></td>
 	<td><?=$v['fid']?></td>
 	<td><?php echo htmlspecialchars($v['name']); ?></td>
-	<td><a href="<?php echo $jumper, $v['id']; ?>"  target="_blank"><?php echo $jumper, $v['id']; ?></a></td>
+	<td><a class="btn btn-default" href="jump.php?<?php echo $v['id']; ?>"  target="_blank">[<?php echo $v['id']; ?>]</a></td>
 	<td><?=$v['pass']?></td>
 	<td><?=$v['username']?></td>
 	<td><?=$v['count']?></td>
