@@ -46,7 +46,7 @@ function print_header($title) {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><?php echo $title; ?></title>
-<link href="https://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
 <?php
