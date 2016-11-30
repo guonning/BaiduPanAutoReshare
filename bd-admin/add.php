@@ -102,7 +102,6 @@ if(!empty($test)) {
 	exit;
 }
 ?>
-<div class="container">
 <h1 class="page-header">添加文件</h1>
 <div class="list-group">
 	<div class="list-group-item">文件名：<?php echo htmlspecialchars($_POST['filename']); ?></div>
@@ -132,5 +131,4 @@ if(!empty($test)) {
 <?php } ?>
 <input class="btn btn-primary" type="submit" name="submit" value="提交" />&nbsp;&nbsp;
 <a class="btn btn-default" href="browse.php">取消</a>
-</form></div>
-</body></html>
+</form></body></html>

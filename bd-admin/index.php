@@ -39,7 +39,7 @@ function dlt(id) {
     xmlHttp.send('delete=' + id);
   }
 }
-</script><div class="container">
+</script>
 <h1 class="page-header">一键补档管理后台</h1>
 <ul class="nav nav-pills">
 	<li><a href="addlink.php" target="_blank">添加记录</a></li>
@@ -47,11 +47,11 @@ function dlt(id) {
 </ul>
 <table class="table table-striped" id="TABLE">
 <thead><tr>
-	<th width="10%">模式</th>
+	<th width="12%">模式</th>
 	<th width="5%">ID</th>
 	<th width="10%">fs_id</th>
-	<th width="25%">文件名</th>
-	<th width="15%">访问地址</th>
+	<th width="29%">文件名</th>
+	<th width="8%">访问地址</th>
 	<th width="5%">提取</th>
 	<th width="10%">百度用户名</th>
 	<th width="5%">补档次数</th>
@@ -91,4 +91,4 @@ foreach($list as $k=>$v) {
 }
 ?>
 </tbody></table>
-</div></body></html>
+</body></html>

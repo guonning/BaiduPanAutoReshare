@@ -31,7 +31,6 @@ if (isset($_GET['switch_user'])) {
         alert_error('用户【'.$_POST['name'].'】删除成功！', 'switch_user.php');
       } else {
         print_header('确认删除'); ?>
-				<div class="container">
         <h1 class="page-header">删除用户</h1>
 				<div class="panel panel-danger">
 				<div class="panel panel-heading"><h3 class="panel-title">确定要删除用户“<?=$user['username']?>”？</h3></div>
@@ -42,7 +41,7 @@ if (isset($_GET['switch_user'])) {
           <input type="hidden" name="userId" value="<?=$_REQUEST['userId']?>" />
           <input type="hidden" name="name" value="<?=$user['username']?>" />
           <input class="btn btn-danger" type="submit" name="confirm" value="确认删除" />
-				</form></p></div></div></body></html>
+				</form></p></div></body></html>
         <?php
         exit;
       }
@@ -106,7 +105,6 @@ if (isset($_GET['switch_user'])) {
       }
     }
     ?>
-		<div class="container">
 		<h1 class="page-header">添加用户</h1>
 		<div class="panel panel-primary">
 		<div class="panel-heading"><h3 class="panel-title">使用百度账号密码</h3></div>
@@ -147,7 +145,6 @@ if (isset($_GET['switch_user'])) {
 $users = $database->select('users', '*', array('siteu_id' => $_SESSION['siteuser_id']));
 print_header('选择用户');
 ?>
-<div class="container">
 <h1 class="page-header">选择百度用户</h1>
 <div class="list-group">
 <?php
@@ -162,4 +159,4 @@ foreach ($users as $k => $v) {
 ?>
 </div>
 <p><a href="switch_user.php?add_user=1">添加用户/修复失效cookie</a></p>
-</div></body></html>
+</body></html>

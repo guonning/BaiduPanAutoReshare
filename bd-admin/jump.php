@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-	<meta charset="utf-8">
+	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
   <title>度娘盘分享守护程序</title>
 	<link href="https://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=1" />
 </head>
 <body class="container">
 	<h1 class="page-header">度娘盘分享守护程序 - 文件下载</h1>
@@ -82,16 +83,16 @@ if (isset($_SERVER['QUERY_STRING']) && ctype_digit($_SERVER['QUERY_STRING'])) {
 			?>
 			<p><b>以下所有下载地址，若出现403错误，请复制地址，粘贴到地址栏或者下载软件中打开。</b></p>
 			<p>
-				<a rel="noreferrer" href="<?php echo htmlspecialchars($link2); ?>">高速下载地址（百度云管家接口）</a>
+				<a class="btn btn-primary" rel="noreferrer" href="<?php echo htmlspecialchars($link2); ?>">高速下载地址（百度云管家接口）</a>
 				<br />若下载速度慢，请刷新本页直到刷出另一个地址，然后再试。
 			</p>
 			<p>
-				<a rel="noreferrer" href="<?php echo htmlspecialchars($meta['info'][0]['dlink']); ?>">下载地址（网页版接口）</a>
+				<a class="btn btn-default" rel="noreferrer" href="<?php echo htmlspecialchars($meta['info'][0]['dlink']); ?>">下载地址（网页版接口）</a>
 				<br />若下载速度慢，请多点几次试试。此链接封杀下载工具的几率比较高。
 			</p>
 			<div>
 				备用下载地址（旧版云管家接口，限速）：
-				<ul><?php foreach ($link as $k => $v) { ?><li><a rel="noreferrer" href="<?php echo htmlspecialchars($v); ?>"><?php echo parse_url($v, PHP_URL_HOST);?></a></li><?php } ?></ul>
+				<ul><?php foreach ($link as $k => $v) { ?><li><a class="label label-warning" rel="noreferrer" href="<?php echo htmlspecialchars($v); ?>"><?php echo parse_url($v, PHP_URL_HOST);?></a></li><?php } ?></ul>
 			</div></div></div>
 			<p><small><a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare" target="_blank">度娘盘分享守护程序</a><br />by 虹原翼</small></p>
 			</body></html>

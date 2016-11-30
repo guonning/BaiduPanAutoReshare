@@ -67,12 +67,10 @@ if(isset($_POST['submit'])) {
 							//这里因为没读block_list需要的相关内容，暂时先不写入block_list，第一次访问会自动写入
 							wlog('添加链接记录：用户名：'.$fileinfo['linkusername'].'，文件完整路径：'.$fileinfo['file_list']['list'][0]['path'].'，文件fs_id：'.$fileinfo['file_list']['list'][0]['fs_id'].'，文件访问地址为：'. $jumper.$id);
 							?>
-							<div class="container">
 							<div class="alert alert-success">添加成功！<br />用户名：<?php echo $fileinfo['linkusername']; ?>
 							<br />文件完整路径：<?php echo htmlspecialchars($fileinfo['file_list']['list'][0]['path']); ?>
 							<br />文件fs_id：<?php echo $fileinfo['file_list']['list'][0]['fs_id']; ?>
 							<br />文件访问地址为：<a href="<?php echo $jumper, $id; ?>" target="_blank"><?php echo $jumper, $id; ?></a></div>
-							</div>
 							<?php
 						}
 					}
@@ -82,7 +80,6 @@ if(isset($_POST['submit'])) {
 	}
 }
 ?>
-<div class="container">
 <h1 class="page-header">添加要补档的文件</h1>
 <form method="post" action="addlink.php">
 请输入分享链接，分享必须由已添加的用户创建：
@@ -103,5 +100,5 @@ if(isset($need_vcode)) {
 }
 ?>
 <input class="btn btn-primary" type="submit" name="submit" value="添加" />
-</form></div>
+</form>
 </body></html>

@@ -29,7 +29,6 @@ print_header('添加文件');
 if (!isset($_SESSION['folder']) || empty($_SESSION['folder']))
 	$_SESSION['folder'] = array('/');
 ?>
-<div class="container">
 <h1 class="page-header">当前用户：<?=$username?></h1>
 <h3>当前路径：<?=end($_SESSION['folder'])?></h3>
 <a class="btn btn-link" href="switch_user.php">切换用户</a>
@@ -88,5 +87,5 @@ foreach ($filelist as $v) {
 	<?php } ?>
 	<td><?=$v['fid']?></td><?=$check_result?></tr>
 <?php } ?>
-</tbody></table></div>
+</tbody></table>
 </body></html>

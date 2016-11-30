@@ -43,12 +43,12 @@ function print_header($title) {
   ?><!DOCTYPE HTML>
 <html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1" />
 <title><?php echo $title; ?></title>
 <link href="https://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body>
+<body class="container">
 <?php
 }
 require(dirname(__FILE__).'/mysql.php');
@@ -74,7 +74,7 @@ function loginRequired($ref = 'index.php') {
     }
   }
   if (!$logedin) {
-    header('Location: user.php?action=login&ref='.$ref);
+    header('Location: user.php?action=login&ref='.urlencode($ref));
     exit;
   }
 }

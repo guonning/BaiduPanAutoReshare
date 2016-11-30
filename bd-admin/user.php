@@ -19,22 +19,28 @@ switch ($_REQUEST['action']) {
 		}
 		print_header('用户登录');
 		?>
-		<h1>度娘盘分享守护程序 - 登录</h1>
-		<form action="" method="post">
-			<?php if (isset($errInfo)) {echo $errInfo,'<br />';} ?>
-			用户名：<input type="text" name="username" /><br />
-			密码：<input type="password" name="password" /><br />
+		<h1 class="page-header">度娘盘分享守护程序 - 登录</h1>
+		<div class="panel panel-primary"><div class="panel-heading"><h3 class="panel-title">管理员登录</h3></div>
+		<div class="panel-body"><form action="" method="post">
+			<?php if (isset($errInfo)) {echo '<div class="alert alert-danger">', $errInfo, '</div>';} ?>
+			用户名：<input class="form-control" style="max-width: 330px;" type="text" name="username" />
+			密码：<input class="form-control" style="max-width: 330px;" type="password" name="password" />
 			<input type="hidden" name="action" value="login" />
 			<?php if (isset($_REQUEST['ref']) and $_REQUEST['ref'] != '') { ?>
 				<input type="hidden" name="ref" value="<?=$_REQUEST['ref']?>" />
 			<?php } ?>
-			<input type="submit" value="登录" />
-		</form></body></html>
+			<br /><input class="btn btn-primary" type="submit" value="登录" />
+		</form></div></div></body></html>
 		<?php
 		break;
 	case 'register':
 		print_header('管理员账号注册');
-		echo '<h1>度娘盘分享守护程序 - 管理员注册</h1>';
+		?>
+		<h1 class="page-header">度娘盘分享守护程序 - 管理员注册</h1>
+		<div class="panel panel-primary">
+		<div class="panel-heading"><h3 class="panel-title">填写注册信息</h3></div>
+		<div class="panel-body">
+		<?php
 		if ($registCode !== FALSE) {
 			$e_msg = array();
 			if (isset($_POST['username'])) {
@@ -50,24 +56,25 @@ switch ($_REQUEST['action']) {
 				if (!$e_msg) {
 					$userHash = md5($_POST['username'].time().mt_rand(0, 65535));
 					$database->insert('siteusers', array('name' => $_POST['username'], 'passwd' => md5($_POST['password']), 'hash' => $userHash));
-					$e_msg[] = '注册成功！<a href="user.php?action=login">前往登录</a>';
+					echo '<div class="alert alert-success">注册成功！<a href="user.php?action=login">前往登录</a></div>';
 				}
 			}
-			if ($e_msg) echo '<p>', implode('<br />', $e_msg), '</p>';
+			if ($e_msg) echo '<div class="alert alert-danger">', implode('<br />', $e_msg), '</div>';
 			?>
 			<form action="" method="post">
 				<input type="hidden" name="action" value="register" />
-				用户名：<input type="text" name="username" /><br />
-				密码：<input type="password" name="password" /><br />
-				确认密码：<input type="password" name="password_c" /><br />
-				<?php if ($registCode !== NULL) { ?>注册码：<input type="text" name="reg_code" /><br /><?php } ?>
-				<input type="submit" value="注册" />
-			</form>
+				用户名：<input class="form-control" style="max-width: 330px;" type="text" name="username" />
+				密码：<input class="form-control" style="max-width: 330px;" type="password" name="password" />
+				确认密码：<input class="form-control" style="max-width: 330px;" type="password" name="password_c" />
+				<?php if ($registCode !== NULL) { ?>注册码：<input class="form-control" style="max-width: 330px;" type="text" name="reg_code" /><?php } ?>
+				<br /><span><input class="btn btn-primary" type="submit" value="注册" /></span>
+				<span><a class="btn btn-default" href="user.php?action=login">返回登录</a></span>
+			</form></div></div>
 			<?php
 		} else {
 			?>
-			<p>当前网站管理员不允许注册。</p>
-			<p>要变更此项配置，请编辑本目录下的config.php文件。</p>
+			<div class="alert alert-warning"><p>当前网站管理员不允许注册。</p>
+			<p><small>要变更此项配置，请编辑本目录下的config.php文件。</small></p></div></div></div>
 			<?php
 		}
 		break;
@@ -89,16 +96,25 @@ switch ($_REQUEST['action']) {
 		}
 		print_header('修改用户数据');
 		?>
-		<p>修改用户密码</p>
-		<p>您的用户名：<?=$siteuser['name']?><br />您的用户ID：<?=$siteuser['ID']?></p>
-		<form action="" method="post">
-			<?php if (isset($msg)) echo '<p>', $msg, '</p>'; ?>
-			当前密码：<input type="password" name="c_cp" /><br />
-			新密码：<input type="password" name="c_np" /><br />
-			确认密码：<input type="password" name="c_cf" /><br />
-			<input type="hidden" name="action" value="profile" />
-			<input type="submit" name="update" value="修改" />
-		</form><br />修改密码后，您可能需要重新登陆。
+		<h1 class="page-header">管理员账号管理</h1>
+		<p><a class="btn btn-link" href="index.php">返回补档列表</a></p>
+		<div class="panel panel-default">
+			<div class="panel-heading"><h3>用户信息</h3></div>
+			<div class="panel-body">您的用户名：<?=$siteuser['name']?><br />您的用户ID：<?=$siteuser['ID']?></div>
+		</div>
+		<div class="panel panel-warning">
+			<div class="panel-heading"><h3>修改用户密码</h3></div>
+			<div class="panel-body">
+			<div class="alert alert-info">修改密码后，您可能需要重新登陆。</div>
+			<form action="" method="post">
+				<?php if (isset($msg)) echo '<p>', $msg, '</p>'; ?>
+				当前密码：<input class="form-control" style="max-width: 330px;" type="password" name="c_cp" />
+				新密码：<input class="form-control" style="max-width: 330px;" type="password" name="c_np" />
+				确认密码：<input class="form-control" style="max-width: 330px;" type="password" name="c_cf" />
+				<input type="hidden" name="action" value="profile" />
+				<br /><input class="btn btn-primary" type="submit" name="update" value="修改" />
+			</form></div>
+		</div>
 		<?php
 		break;
 	case 'logout':
@@ -111,21 +127,25 @@ switch ($_REQUEST['action']) {
 			session_destroy();
 			print_header('登出成功');
 			?>
-			<p>您已登出</p>
-			<p><a href="index.php">返回</a></p>
+			<div class="alert alert-info">您已登出</div>
+			<p><a class="btn btn-link" href="index.php">返回</a></p>
 			<?php
 		} else {
 			print_header('登出');
 			?>
-			<p>确认要登出吗？</p>
-			<p>
+			<h1 class="page-header">登出</h1>
+			<div class="panel panel-info">
+			<div class="panel-heading"><h3 class="panel-title">登出确认操作</h3></div>
+			<div class="panel-body">
+			<div class="alert alert-info">
 				登出后，除非已经建立会话（本会话除外），所有登录过的设备都将被强制登出。<br />
 				您需要重新使用您的用户名和密码来登录。
-			</p>
+			</div>
 			<form action="" method="post">
 				<input type="hidden" name="action" value="logout" />
-				<input type="submit" name="confirm" value="继续登出" />
-			</form>
+				<br /><input class="btn btn-warning" type="submit" name="confirm" value="继续登出" />
+				<span><a class="btn btn-link" href="index.php">返回补档列表</a></span>
+			</form></div></div>
 			<?php
 		}
 		break;
