@@ -22,23 +22,7 @@ function findBetween($str, $begin, $end) {
   return substr($str, $pos1 + strlen($begin), $pos2 - $pos1 - strlen($begin));
 }
 
-$head=false;
-function alert_error($error, $return) {
-  global $head;
-  if (!$head) {
-    print_header('');
-  }
-  if (!$return) {
-    echo "<script>alert('$error');window.close();</script></body></html>";
-  } else {
-    echo "<script>alert('$error');window.location.href='$return';</script></body></html>";
-  }
-  die();
-}
-
 function print_header($title) {
-  global $head;
-  $head = TRUE;
   header('Content-Type: text/html; charset=utf-8');
   ?><!DOCTYPE HTML>
 <html>
@@ -51,6 +35,35 @@ function print_header($title) {
 <body class="container">
 <?php
 }
+
+function showMessage() {
+	if (isset($_SESSION['msg'])) {
+		foreach ($_SESSION['msg'] as $v) {
+			switch ($v[1]) {
+				case 'success':
+					echo '<div class="alert alert-success">';
+					break;
+				case 'info':
+					echo '<div class="alert alert-info">';
+					break;
+				case 'warning':
+					echo '<div class="alert alert-warning">';
+					break;
+				case 'danger':
+					echo '<div class="alert alert-danger">';
+					break;
+			}
+			echo $v[0], '</div>';
+		}
+		$_SESSION['msg'] = array();
+	}
+}
+
+function addMessage($content, $type='info') {
+	if (!isset($_SESSION['msg'])) $_SESSION['msg'] = array();
+	$_SESSION['msg'][] = array($content, $type);
+}
+
 require(dirname(__FILE__).'/mysql.php');
 
 //部分代码参考自 https://github.com/ly0/baidupcsapi

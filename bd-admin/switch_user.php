@@ -4,44 +4,45 @@ loginRequired($_SERVER['PHP_SELF']);
 
 if (isset($_GET['switch_user'])) {
   if (!is_numeric($_GET['switch_user'])) {
-    alert_error('用户ID错误', 'switch_user.php');
+		addMessage('用户ID错误', 'danger');
   }
   $result = loginFromDatabase($_GET['switch_user'], $_SESSION['siteuser_id']);
   if ($result === -1) {
-    alert_error('找不到用户', 'switch_user.php');
+		addMessage('找不到用户', 'danger');
   } else if ($result === false) {
-    alert_error('cookie失效，或者百度封了IP！', 'switch_user.php');
-  }
-  unset($_SESSION['file_can_add'], $_SESSION['folder']);
-  $_SESSION['uid'] = $uid;
-  wlog('切换用户：['.$uid.']'.$username);
-  header('Location: browse.php');
-  die();
+		addMessage('cookie失效，或者百度封了IP！', 'danger');
+  } else {
+		unset($_SESSION['file_can_add'], $_SESSION['folder']);
+		$_SESSION['uid'] = $uid;
+		wlog('切换用户：['.$uid.']'.$username);
+		header('Location: browse.php');
+		exit;
+	}
 } elseif (isset($_REQUEST['remove_user'])) {
   if (!is_numeric($_REQUEST['userId'])) {
-    alert_error('用户ID错误','switch_user.php');
+		addMessage('用户ID错误', 'danger');
   } else {
 		$user = $database->get('users', 'username', array('AND' => array('ID' => $_REQUEST['userId'], 'siteu_id' => $_SESSION['siteuser_id'])));
     if (empty($user)) {
-      alert_error('找不到用户','switch_user.php');
+			addMessage('找不到用户', 'danger');
     } else {
       if (isset($_POST['confirm'])) {
 				$database->delete('users', array('ID' => $_POST['userId']));
         wlog('删除用户成功：['.$_POST['userId'].']'.$_POST['name'], 1);
-        alert_error('用户【'.$_POST['name'].'】删除成功！', 'switch_user.php');
+				addMessage('用户“'.$_POST['name'].'”删除成功。', 'success');
       } else {
         print_header('确认删除'); ?>
         <h1 class="page-header">删除用户</h1>
 				<div class="panel panel-danger">
-				<div class="panel panel-heading"><h3 class="panel-title">确定要删除用户“<?=$user['username']?>”？</h3></div>
+				<div class="panel panel-heading"><h3 class="panel-title">确定要删除用户“<?=$user?>”？</h3></div>
 				<div class="panel panel-body">
 				<p>警告：删除用户将同时删除此用户的全部补档记录。<br />确认要继续吗？</p>
-				<p><form method="post" action="">
+				<form method="post" action="">
           <input type="hidden" name="remove_user" value="1" />
           <input type="hidden" name="userId" value="<?=$_REQUEST['userId']?>" />
-          <input type="hidden" name="name" value="<?=$user['username']?>" />
+          <input type="hidden" name="name" value="<?=$user?>" />
           <input class="btn btn-danger" type="submit" name="confirm" value="确认删除" />
-				</form></p></div></body></html>
+				</form></div></div></body></html>
         <?php
         exit;
       }
@@ -51,9 +52,9 @@ if (isset($_GET['switch_user'])) {
   print_header('添加用户');
   if (isset($_POST['create_user'])) {
     if (!isset($_POST['name']) || $_POST['name'] == '') {
-      echo '<h1>错误：请输入用户名</h1>';
+      addMessage('错误：请输入用户名', 'danger');
     } else if (!isset($_POST['password']) || $_POST['password']=='') {
-      echo '<h1>错误：请输入密码</h1>';
+      addMessage('错误：请输入密码', 'danger');
     } else {
       if (isset($_POST['code_string'])) {
         $result = login($_POST['name'], $_POST['password'], $_POST['code_string'], $_POST['captcha']);
@@ -64,53 +65,44 @@ if (isset($_GET['switch_user'])) {
         global $bduss;
 				# medoo 不滋瓷原来的 INSERT ON DUPLICATE KEY 语法
 				if ($database->has('users', array('username' => $_POST['name'])))
-					$database->update('users', array('cookie' => get_cookie()), array('username' => $_POST['name'], 'siteu_id' => $_SESSION['siteuser_id']));
+					$database->update('users', array('cookie' => get_cookie()), array('AND' => array('username' => $_POST['name'], 'siteu_id' => $_SESSION['siteuser_id'])));
 				else $database->insert('users', array('username' => $_POST['name'], 'cookie' => get_cookie(), 'siteu_id' => $_SESSION['siteuser_id'], 'newmd5' => ''));
         wlog('添加用户：'.$_POST['name']);
         $check = validateCookieAndGetBdstoken(); //应对百度的新登录机制
-        if (!$check) { ?>
-          <h1>登录成功，但访问百度云失败，可能百度改了验证机制，请联系开发者！</h1>
-          <p>您可以参照 <a href="https://github.com/NijiharaTsubasa/BaiduPanAutoReshare/issues/15">https://github.com/NijiharaTsubasa/BaiduPanAutoReshare/issues/15</a> 手动更新此用户的cookies。<br /><a href="switch_user.php">返回</a></p>
-        <?php
-          die();
-        }
-        alert_error('用户【'.$_POST['name'].'】添加成功！', 'switch_user.php');
-      }
-      if ($result['errno'] == 4) {
-				$errMsg = '密码错误';
-      } else if ($result['errno'] == 257) {
-				$errMsg = '请输入验证码';
-      } else if ($result['errno'] == 6) {
-				$errMsg = '验证码错误';
-      } else if ($result['errno'] == 120021) {
-				$errMsg = '请验证手机（在百度登录此账号，会提示验证）';
+        if (!$check) addMessage('登录成功，但访问百度云失败，可能百度改了验证机制，请联系开发者！', 'warning');
+        addMessage('已添加或更新用户“'.$_POST['name'].'”。', 'success');
       } else {
-				$errMsg = '错误编号：'.$result['errno'];
-      }
+				switch ($result['errno']) {
+					case 4:			addMessage('密码错误', 'danger'); break;
+					case 257:		addMessage('请输入验证码', 'danger'); break;
+					case 6:			addMessage('验证码错误', 'danger'); break;
+					case 120021:	addMessage('请验证登录（使用本服务器所在地IP登录百度云，按照提示操作）', 'danger'); break;
+					default:		addMessage('错误编号：'.$result['errno'], 'danger'); break;
+				}
+			}
     }
   } elseif (isset($_POST['create_cookie'])) {
     if (!isset($_POST['name']) or $_POST['name'] == '') {
-			$errMsg = '错误：请输入用户名';
+			addMessage('错误：请输入用户名', 'danger');
     } elseif (!isset($_POST['login_cookie']) or $_POST['login_cookie'] == '') {
-			$errMsg = '错误：请输入Cookies';
+			addMessage('错误：请输入Cookies', 'danger');
     } else {
       set_cookie($_POST['login_cookie']);
 			if ($database->has('users', array('username' => $_POST['name'])))
-				$database->update('users', array('cookie' => $_POST['login_cookie']), array('username' => $_POST['name'], 'siteu_id' => $_SESSION['siteuser_id']));
+				$database->update('users', array('cookie' => $_POST['login_cookie']), array('AND' => array('username' => $_POST['name'], 'siteu_id' => $_SESSION['siteuser_id'])));
 			else $database->insert('users', array('username' => $_POST['name'], 'cookie' => $_POST['login_cookie'], 'siteu_id' => $_SESSION['siteuser_id'], 'newmd5' => ''));
       wlog('添加用户：'.$_POST['name']);
       $check = validateCookieAndGetBdstoken();
-			if (!$check) { $errMsg = '访问百度云失败！Cookies可能已经失效。'; exit; }
-      alert_error('用户【'.$_POST['name'].'】添加成功！', 'switch_user.php');
+			if (!$check) addMessage('访问百度云失败！Cookies可能已经失效。', 'warning');
+			addMessage('已添加或更新用户“'.$_POST['name'].'”。', 'success');
       }
     }
     ?>
 		<h1 class="page-header">添加用户</h1>
+		<?php showMessage(); ?>
 		<div class="panel panel-primary">
 		<div class="panel-heading"><h3 class="panel-title">使用百度账号密码</h3></div>
-    <form method="post" action="switch_user.php?add_user=1">
-		<div class="panel-body">
-		<?php if (isset($errMsg) and $errMsg) { ?><div class="alert alert-danger"><?php echo $errMsg; ?></div><?php } ?>
+		<div class="panel-body"><form method="post" action="switch_user.php?add_user=1">
 		用户名：
 		<input class="form-control" style="max-width: 330px;" type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>"/>
 		密码：<input class="form-control" style="max-width: 330px;" type="password" name="password" />
@@ -131,12 +123,12 @@ if (isset($_GET['switch_user'])) {
 				在开发者工具中找到“网络”选项卡，按F5刷新页面，找到一个指向域名pan.baidu.com的请求并复制请求头中的Cookie列<br />
 				将您刚才复制的内容粘贴在下面的文本框内。<br />
 				一个可用的Cookie中必定包含项：BAIDUID、BDUSS、STOKEN、PANPSC 4项值。
-			</p><p>
+			</p>
 			<form method="post" action="switch_user.php?add_user=1">
 			用户名：<input class="form-control" style="max-width: 330px;" type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>" />
 			Cookies：<textarea class="form-control" name="login_cookie" rows="5" style="width: 330px;"></textarea><br />
 			<input class="btn btn-primary" type="submit" name="create_cookie" value="提交" />
-			</form></p>
+			</form>
 		</div></div>
 		<p><a href="switch_user.php">返回</a></p>
     </body></html>
@@ -147,6 +139,7 @@ $users = $database->select('users', '*', array('siteu_id' => $_SESSION['siteuser
 print_header('选择用户');
 ?>
 <h1 class="page-header">选择百度用户</h1>
+<?php showMessage(); ?>
 <div class="list-group">
 <?php
 foreach ($users as $k => $v) {
@@ -159,5 +152,5 @@ foreach ($users as $k => $v) {
 }
 ?>
 </div>
-<p><a href="switch_user.php?add_user=1">添加用户/修复失效cookie</a></p>
+<p><a class="btn btn-success" href="switch_user.php?add_user=1">添加用户/修复失效cookie</a></p>
 </body></html>

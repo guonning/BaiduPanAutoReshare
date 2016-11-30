@@ -8,51 +8,62 @@ if(!isset($_SESSION['uid']) || !is_numeric($_SESSION['uid'])) {
 }
 
 if (!loginFromDatabase($_SESSION['uid'])) {
-  alert_error('cookie失效，或者百度封了IP！', 'switch_user.php');
+	addMessage('cookie失效，或者百度封了IP！', 'danger');
+	header('Location: switch_user.php');
+	exit;
+}
+
+if(!isset($_POST['fid']) || !isset($_POST['filename']) || !isset($_SESSION['file_can_add'][$_POST['fid']])) {
+	addMessage('文件添加请求参数错误！', 'danger');
+	header('Location: switch_user.php');
+	exit;
+}
+if(!$_SESSION['file_can_add'][$_POST['fid']]) {
+	addMessage('本文件无法添加至自动补档，可能fs_id不存在，或者存在路径问题，或者已经添加过了。', 'danger');
+	header('Location: browse.php');
+	exit;
 }
 
 print_header('添加文件');
-if(!isset($_POST['fid']) || !isset($_POST['filename']) || !isset($_SESSION['file_can_add'][$_POST['fid']])) {
-	alert_error('请勿直接访问本页。','browse.php');
-}
-if(!$_SESSION['file_can_add'][$_POST['fid']]) {
-	alert_error('本文件无法添加至自动补档，可能fs_id不存在，或者存在路径问题，或者已经添加过了。','browse.php');
-}
 if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 	$test = $database->get('watchlist', '*', array('AND' => array('fid' => $_POST['fid'], 'name' => $_POST['filename'], 'user_id' => $uid)));
 	$md5=getFileMetas($_POST['filename']);
 	if($_POST['code']=='') $_POST['code']='0';
-	if(!empty($test))
-		echo "<h1>上次提交已经成功，请勿重复提交。</h1>";
+	if(!empty($test)) addMessage('上次提交已经成功，请勿重复提交。', 'warning');
 	elseif(strtolower($_POST['code'])!=='md5' && $_POST['code']!=='0' && strlen($_POST['code'])!=4)
-		echo '<h1>错误：提取码位数不对。请输入4个半角字符，或者1个全角字符和1个半角字符的组合。</h1>';
+		addMessage('错误：提取码位数不对。请输入4个半角字符，或者1个全角字符和1个半角字符的组合。', 'danger');
 	elseif(strtolower($_POST['code'])=='md5') {
-		if ($md5 === false)
-			echo '<h1>设置补档MD5：出现未知错误，找不到这个文件，请在添加文件列表里重新进入！<a href="browse.php">返回</a></h1>';
-		elseif ($md5['info'][0]['isdir'])
-			echo '<h1>设置补档MD5：这是一个文件夹，没有MD5</h1>';
-		elseif (count($md5['info'][0]['block_list']) > 1)
-			echo '<h1>设置补档MD5：这个文件分片了，请上传小一些的文件（几个字节就可以了）</h1>';
+		if ($md5 === false) addMessage('设置补档MD5：出现未知错误，找不到这个文件，请在添加文件列表里重新进入！', 'danger');
+		elseif ($md5['info'][0]['isdir']) addMessage('设置补档MD5：这是一个文件夹，没有MD5', 'danger');
+		elseif (count($md5['info'][0]['block_list']) > 1) addMessage('设置补档MD5：这个文件分片了，请上传小一些的文件（几个字节就可以了）', 'danger');
 		else {
 			$current_md5 = $database->get('users', 'newmd5', array('id' => $_SESSION['uid']));
 			$current_md5 = json_decode($current_md5['newmd5']);
-			if (!is_array($current_md5)) {
-				$current_md5 = array();
-			}
+			if (!is_array($current_md5))  $current_md5 = array();
 			if (array_search($md5['info'][0]['block_list'][0], $current_md5) !== false) {
-				echo '<h1>这个文件已经被设置成补档MD5了！<a href="browse.php">返回</a></h1>';
+				addMessage('这个文件已经被设置成补档MD5了！', 'info');
+				header('Location: browse.php');
+				exit;
 			} else {
 				$current_md5[] = $md5['info'][0]['block_list'][0];
 				$database->update('users', array('(JSON) newmd5' => $current_md5), array('ID' => $_SESSION['uid']));
 				$md5 = json_encode($current_md5);
-				echo '<h1>设置补档MD5成功！此文件可以移动、更名，但切勿删除！<a href="browse.php">返回</a></h1>';
+				addMessage('设置补档MD5成功！此文件可以移动、更名，但切勿删除！', 'success');
+				header('Location: browse.php');
+				exit;
 			}
-			echo '<p>当前设置的MD5列表：<br />';
-			foreach($current_md5 as $v) {
-				echo $v.'<br />';
-			}
-			echo '默认将使用第一个，将在文件被温馨提示时自动切换到下一个。</p>';
-			die();
+			print_header('添加MD5补档');
+			?>
+			<h1 class="page-header">MD5补档</h1>
+			<?php showMessage(); ?>
+			<div class="panel panel-primary">
+			<div class="panel-heading"><h3 class="panel-title">当前设置的MD5列表</h3></div>
+			<div class="panel-body"><div class="list-group">
+			<?php foreach($current_md5 as $v) { ?><div class="list-group-item"><?php echo $v; ?></div><?php } ?>
+			</div><p>默认将使用第一个，将在文件被温馨提示时自动切换到下一个</p>
+			</div></div>
+			<?php
+			exit;
 		}
 	} else {
 		if(!$md5['info'][0]['isdir'] && isset($_POST['no_share']) && $_POST['no_share'] > 0) {
@@ -64,7 +75,9 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 		} elseif($_POST['link']=='') {
 			$_POST['link']=substr(share($_POST['fid'],$_POST['code'], true),20);
       if (!$_POST['link']) {
-        alert_error('分享创建失败！', 'browse.php');
+		  addMessage('分享创建失败', 'danger');
+		  header('Location: browse.php');
+		  exit;
       }
 		} elseif(substr($_POST['link'],0,20)=='http://pan.baidu.com')
 			$_POST['link']=substr($_POST['link'],20);
@@ -72,7 +85,7 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 			$_POST['link']=substr($_POST['link'],13);
 		else {
 			$_POST['link']=false;
-			echo '<h1>错误：地址输入有误。</h1>';
+			addMessage('地址输入有误', 'danger');
 		}
 		if($_POST['link']) {
 			$id = $database->insert('watchlist', array(
@@ -82,25 +95,23 @@ if(isset($_POST['submit']) && $_POST['submit']=='提交') {
 				'siteu_id' => $_SESSION['siteuser_id'], 'failed' => 0
 			));
 			wlog('在文件浏览页添加记录：用户名：'.$username.'，文件完整路径：'.$_POST['filename'].'，文件fs_id：'.$_POST['fid'].'，文件访问地址为：'. $jumper.$id);
-			echo '<h1>添加成功！文件访问地址为：<a href="'. $jumper.$id.'" target="_blank">'. $jumper.$id.'</a><br />';
-			echo '<a href="browse.php">返回</a></h1>';
-			die();
+			$jumPath = dirname($_SERVER['SCRIPT_NAME']);
+			$jumPath = ($jumPath == '/' ? '' : $jumPath).'/jump.php?';
+			addMessage('添加成功！文件访问地址为：<a class="label label-default" href="jump.php?'.$id.'" target="_blank">http://'.$_SERVER['HTTP_HOST'].$jumPath.$id.'</a>', 'success');
+			header('Location: browse.php');
+			exit;
 		}
 	}
 }
 $test = $database->get('watchlist', '*', array('AND' => array('fid' => $_POST['fid'], 'name' => $_POST['filename'], 'user_id' => $uid)));
 if(!empty($test)) {
-	?>
-	<p>
-		这个文件已经添加过啦！<br />文件名：<?php echo htmlspecialchars($test['name']); ?><br />
-		访问地址：<a href="<?=$jumper?><?=$test['id']?>" target="_blank"><?=$jumper?><?=$test['id']?></a><br />
-		分享地址：<a href="http://pan.baidu.com<?php echo htmlspecialchars($test['link']); ?>"  target="_blank">http://pan.baidu.com<?php echo htmlspecialchars($test['link']); ?></a><br />
-		提取码：<?=$test['pass']?><br />补档次数：<?=$test['count']?><br />百度用户名：<?=$username?><br />
-		<a href="browse.php">返回</a>
-	</p></body></html>
-	<?php
+	$jumPath = dirname($_SERVER['SCRIPT_NAME']);
+	$jumPath = ($jumPath == '/' ? '' : $jumPath).'/jump.php?';
+	addMessage('该文件已经被添加过！访问地址：<a class="label label-default" href="jump.php?'.$test['id'].'" target="_blank">http://'.$_SERVER['HTTP_HOST'].$jumPath.$test['id'].'</a>', 'warning');
+	header('Location: browse.php');
 	exit;
 }
+print_header('添加文件');
 ?>
 <h1 class="page-header">添加文件</h1>
 <div class="list-group">

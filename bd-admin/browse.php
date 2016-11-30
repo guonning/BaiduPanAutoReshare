@@ -10,7 +10,9 @@ if(!isset($_SESSION['uid']) || !is_numeric($_SESSION['uid'])) {
 }
 
 if (!loginFromDatabase($_SESSION['uid'])) {
-  alert_error('cookie失效，或者百度封了IP！', 'switch_user.php');
+	addMessage('cookie失效，或者百度封了IP！', 'danger');
+	header('Location: switch_user.php');
+	exit;
 }
 
 if (isset($_GET['switch_dir'])) {
@@ -33,6 +35,7 @@ if (!isset($_SESSION['folder']) || empty($_SESSION['folder']))
 <h3>当前路径：<?=end($_SESSION['folder'])?></h3>
 <a class="btn btn-link" href="switch_user.php">切换用户</a>
 <?php if (count($_SESSION['folder']) != 1) { ?><a class="btn btn-link" href="browse.php?goup=1">返回上级文件夹</a><?php } ?>
+<?php showMessage(); ?>
 <p>注意：本程序无法检测到全部可能导致出问题的情况。请在主页中查看全部补档记录的可用性。</p>
 <table class="table table-striped">
 <thead><tr><th>补档</th><th>工具</th><th>文件名</th><th>fs_id</th><th>状态</th><th>访问地址</th><th>分享地址</th></tr></thead>
