@@ -77,22 +77,22 @@ if (isset($_GET['switch_user'])) {
         alert_error('用户【'.$_POST['name'].'】添加成功！', 'switch_user.php');
       }
       if ($result['errno'] == 4) {
-        echo '<h1>密码错误</h1>';
+				$errMsg = '密码错误';
       } else if ($result['errno'] == 257) {
-        echo '<h1>请输入验证码</h1>';
+				$errMsg = '请输入验证码';
       } else if ($result['errno'] == 6) {
-        echo '<h1>验证码错误</h1>';
+				$errMsg = '验证码错误';
       } else if ($result['errno'] == 120021) {
-        echo '<h1>请验证手机（在百度登录此账号，会提示验证）</h1>';
+				$errMsg = '请验证手机（在百度登录此账号，会提示验证）';
       } else {
-        echo '<h1>错误编号：'.$result['errno'].'</h1>';
+				$errMsg = '错误编号：'.$result['errno'];
       }
     }
   } elseif (isset($_POST['create_cookie'])) {
     if (!isset($_POST['name']) or $_POST['name'] == '') {
-      echo '<h1>错误：请输入用户名</h1>';
+			$errMsg = '错误：请输入用户名';
     } elseif (!isset($_POST['login_cookie']) or $_POST['login_cookie'] == '') {
-      echo '<h1>错误：请输入Cookies</h1>';
+			$errMsg = '错误：请输入Cookies';
     } else {
       set_cookie($_POST['login_cookie']);
 			if ($database->has('users', array('username' => $_POST['name'])))
@@ -100,7 +100,7 @@ if (isset($_GET['switch_user'])) {
 			else $database->insert('users', array('username' => $_POST['name'], 'cookie' => $_POST['login_cookie'], 'siteu_id' => $_SESSION['siteuser_id'], 'newmd5' => ''));
       wlog('添加用户：'.$_POST['name']);
       $check = validateCookieAndGetBdstoken();
-      if (!$check) { echo '<h1>访问百度云失败！Cookies可能已经失效。</h1>'; exit; }
+			if (!$check) { $errMsg = '访问百度云失败！Cookies可能已经失效。'; exit; }
       alert_error('用户【'.$_POST['name'].'】添加成功！', 'switch_user.php');
       }
     }
@@ -109,7 +109,8 @@ if (isset($_GET['switch_user'])) {
 		<div class="panel panel-primary">
 		<div class="panel-heading"><h3 class="panel-title">使用百度账号密码</h3></div>
     <form method="post" action="switch_user.php?add_user=1">
-		<div class="panel-body"><p>
+		<div class="panel-body">
+		<?php if (isset($errMsg) and $errMsg) { ?><div class="alert alert-danger"><?php echo $errMsg; ?></div><?php } ?>
 		用户名：
 		<input class="form-control" style="max-width: 330px;" type="text" name="name" value="<?php echo isset($_POST['name'])?$_POST['name']:(isset($_GET['name'])?$_GET['name']:''); ?>"/>
 		密码：<input class="form-control" style="max-width: 330px;" type="password" name="password" />
@@ -118,7 +119,7 @@ if (isset($_GET['switch_user'])) {
     <input type="hidden" name="code_string" value="<?php echo $result['code_string']; ?>" />
     <?php } ?>
 		<br /><input class="btn btn-primary" type="submit" name="create_user" value="登录" />
-		</form></p></div></div>
+		</form></div></div>
 		<div class="panel panel-default">
 		<div class="panel-heading"><h3 class="panel-title">使用Cookie登录账号</h3></div>
 		<div class="panel-body">
