@@ -8,7 +8,7 @@ $db='budang';
 //要模仿的浏览器
 $ua='netdisk;4.6.1.0;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia';
 
-//后台显示的跳转地址
+//后台显示的跳转地址，目前准备弃用此项
 $jumper = 'http://localhost/jump.php?';
 
 //直链功能的开关
@@ -22,7 +22,8 @@ $enable_direct_video_play = false;
 //应用户要求：强制只开启直链、禁用提取的开关，会覆盖enable_direct_link
 $force_direct_link = false;
 
-//生成新文件名，不含扩展名
-function generateNewName() {
-	return '[GalACG]EX' . str_pad((time() - 1402761600),9,'0',STR_PAD_LEFT);
-}
+//管理员注册码
+// String: 添加管理员需要输入该字符串
+// NULL: 添加管理员不需要输入注册码
+// FALSE: 禁用前界面添加管理员功能
+$registCode = FALSE;
