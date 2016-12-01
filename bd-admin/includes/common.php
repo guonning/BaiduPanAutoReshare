@@ -1,10 +1,12 @@
 <?php
-if (file_exists(dirname(__FILE__).'/../config.php')) require_once dirname(__FILE__).'/../config.php';
+define('APP_ROOT', dirname(__FILE__));
+if (file_exists(APP_ROOT.'/../config.php')) require_once dirname(__FILE__).'/../config.php';
 else {
 	header('Location: install.php');
 	exit;
 }
-require(dirname(__FILE__).'/curl.php');
+require_once APP_ROOT.'/curl.php' ;
+require_once APP_ROOT.'/db.php';
 
 function wlog($message, $level = 0) {
   global $database;
@@ -63,8 +65,6 @@ function addMessage($content, $type='info') {
 	if (!isset($_SESSION['msg'])) $_SESSION['msg'] = array();
 	$_SESSION['msg'][] = array($content, $type);
 }
-
-require(dirname(__FILE__).'/mysql.php');
 
 //部分代码参考自 https://github.com/ly0/baidupcsapi
 $bdstoken = false;

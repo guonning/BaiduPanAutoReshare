@@ -1,5 +1,5 @@
 <?php
-$sqls = array(
+$sqls_mysql = array(
 	'SET FOREIGN_KEY_CHECKS=0',
 	'DROP TABLE IF EXISTS `log_new`',
 	'DROP TABLE IF EXISTS `block_list`',
@@ -30,25 +30,67 @@ $sqls = array(
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 	'CREATE TABLE `watchlist` (
 		`id` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-		`fid` TINYTEXT COLLATE utf8_unicode_ci NOT NULL,
-		`name` TEXT COLLATE utf8_unicode_ci NOT NULL,
-		`link` TINYTEXT COLLATE utf8_unicode_ci NOT NULL,
+		`fid` TINYTEXT NOT NULL,
+		`name` TEXT NOT NULL,
+		`link` TINYTEXT NOT NULL,
 		`count` INT(11) NOT NULL,
-		`pass` VARCHAR(4) COLLATE utf8_unicode_ci DEFAULT NULL,
+		`pass` VARCHAR(4) DEFAULT NULL,
 		`user_id` INT(11) NOT NULL,
 		`siteu_id` INT(11) NOT NULL,
-		`failed` TINYINT(1) NOT NULL DEFAULT \'0\',
+		`failed` TINYINT(1) NOT NULL DEFAULT 0,
 		INDEX (`user_id`),
 		INDEX (`siteu_id`),
 		FOREIGN KEY (`user_id`) REFERENCES `users` (`ID`) ON DELETE CASCADE,
 		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci',
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 	'CREATE TABLE `block_list` (
 		`ID` int(11) NOT NULL PRIMARY KEY,
 		`block_list` LONGTEXT NOT NULL,
 		FOREIGN KEY (`ID`) REFERENCES `watchlist` (`ID`) ON DELETE CASCADE
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8'
 );
+$sqls_sqlite = array(
+	'DROP TABLE IF EXISTS `log_new`',
+	'DROP TABLE IF EXISTS `block_list`',
+	'DROP TABLE IF EXISTS `watchlist`',
+	'DROP TABLE IF EXISTS `users`',
+	'DROP TABLE IF EXISTS `siteusers`',
+	'CREATE TABLE `siteusers` (
+		`ID` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		`name` TEXT NOT NULL UNIQUE,
+		`passwd` TEXT NOT NULL,
+		`hash` TEXT NOT NULL )',
+	'CREATE TABLE `log_new` (
+		`ID` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		`IP` TEXT NOT NULL,
+		`level` TEXT NOT NULL,
+		`content` TEXT NOT NULL )',
+	'CREATE TABLE `users` (
+		`ID` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		`siteu_id` INTEGER NOT NULL,
+		`username` TEXT NOT NULL UNIQUE,
+		`cookie` TEXT NOT NULL,
+		`newmd5` TEXT NOT NULL,
+		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE )',
+	'CREATE TABLE `watchlist` (
+		`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		`fid` TEXT NOT NULL,
+		`name` TEXT NOT NULL,
+		`link` TEXT NOT NULL,
+		`count` INTEGER NOT NULL,
+		`pass` TEXT DEFAULT NULL,
+		`user_id` INTEGER NOT NULL,
+		`siteu_id` INTEGER NOT NULL,
+		`failed` INTEGER NOT NULL DEFAULT 0,
+		FOREIGN KEY (`user_id`) REFERENCES `users` (`ID`) ON DELETE CASCADE,
+		FOREIGN KEY (`siteu_id`) REFERENCES `siteusers` (`ID`) ON DELETE CASCADE )',
+	'CREATE TABLE `block_list` (
+		`ID` int(11) NOT NULL PRIMARY KEY,
+		`block_list` LONGTEXT NOT NULL,
+		FOREIGN KEY (`ID`) REFERENCES `watchlist` (`ID`) ON DELETE CASCADE )'
+);
+
+require_once 'includes/medoo.php';
 session_start();
 header('Content-Type: text/html; charset=utf-8');
 $nocontinue = FALSE;
@@ -75,13 +117,25 @@ function reportError($info) {
 	<?php
 	exit;
 }
-if (isset($_SESSION['db_checked']) and $_SESSION['db_checked']) {
+$db = NULL;
+function connect_db() {
+	global $db;
 	try {
-		$mysql = new PDO("mysql:host=${_SESSION['db_host']};dbname=${_SESSION['db_name']}", $_SESSION['db_user'], $_SESSION['db_pass']);
-	} catch(PDOException $e) {
+		$db = new medoo(array(
+			'database_type' => $_SESSION['db_type'],
+			'database_name' => $_SESSION['db_name'],
+			'database_file' => $_SESSION['db_path'],
+			'server' => $_SESSION['db_host'],
+			'username' => $_SESSION['db_user'],
+			'password' => $_SESSION['db_pass'],
+			'charset' => 'utf8'
+		));
+		$_SESSION['db_checked'] = TRUE;
+		return TRUE;
+	} catch (Exception $e) {
 		$_SESSION['db_checked'] = FALSE;
+		return FALSE;
 	}
-	$mysql->query('set names utf8');
 }
 switch ($_REQUEST['step']) {
 	case 0:
@@ -97,20 +151,24 @@ switch ($_REQUEST['step']) {
 		<?php
 		break;
 	case 1:
-		if (isset($_POST['update'])) {
-			if (!isset($_POST['db_host']) or $_POST['db_host'] == '') reportError('数据库地址不能为空');
-			if (!isset($_POST['db_user']) or $_POST['db_user'] == '') reportError('数据库用户名不能为空');
-			if (!isset($_POST['db_name']) or $_POST['db_name'] == '') reportError('数据库名不能为空');
-			try {
-				new PDO("mysql:host=${_POST['db_host']};dbname=${_POST['db_name']}", $_POST['db_user'], $_POST['db_pass']);
-			} catch(PDOException $e) {
-				reportError('数据库连接失败！');
-			}
-			$_SESSION['db_host'] = $_POST['db_host'];
-			$_SESSION['db_user'] = $_POST['db_user'];
-			$_SESSION['db_pass'] = $_POST['db_pass'];
-			$_SESSION['db_name'] = $_POST['db_name'];
-			$_SESSION['db_checked'] = TRUE;
+		if (isset($_POST['update']) and isset($_POST['db_type'])) {
+			if ($_POST['db_type'] === 'sqlite') {
+				if (!isset($_POST['db_path']) or $_POST['db_path'] === '') reportError('数据库文件路径不能为空');
+				@file_put_contents($_POST['db_path'], '');
+				if (!is_writable($_POST['db_path'])) reportError('数据库文件路径无写入权限');
+				$_SESSION['db_type'] = 'sqlite';
+				$_SESSION['db_path'] = $_POST['db_path'];
+				$_SESSION['db_host'] = $_SESSION['db_user'] =  $_SESSION['db_pass'] =  $_SESSION['db_name'] = '';
+				if (!connect_db()) reportError('数据库连接失败！');
+			} elseif ($_POST['db_type'] === 'mysql') {
+				$_SESSION['db_type'] = 'mysql';
+				$_SESSION['db_host'] = $_POST['db_host'];
+				$_SESSION['db_user'] = $_POST['db_user'];
+				$_SESSION['db_pass'] = $_POST['db_pass'];
+				$_SESSION['db_name'] = $_POST['db_name'];
+				$_SESSION['db_path'] = '';
+				if (!connect_db()) reportError('数据库连接失败！');
+			} else reportError('无法识别的数据库！');
 			?>
 			<p>连接数据库成功</p>
 			<p>接下来将会重新创建数据库表，您当前数据库中的一些数据将可能丢失，请做好备份！</p>
@@ -118,22 +176,52 @@ switch ($_REQUEST['step']) {
 			<?php
 		} else {
 			?>
-			<p>请填写您的服务器MySQL数据库信息：</p>
+			<p>请填写您的服务器数据库信息：</p>
 			<form action="" method="post">
 				<input type="hidden" name="step" value="1" />
-				地址：<input type="text" name="db_host" value="localhost" /><br />
-				用户名：<input type="text" name="db_user" value="root" /><br />
-				密码：<input type="password" name="db_pass" value="" /><br />
-				数据库名：<input type="text" name="db_name" value="mysql" /><br />
+				数据库类型：<select name="db_type" onchange="db_switch(this.value);">
+					<option value="mysql">MySQL</option>
+					<option value="sqlite">SQLite</option>
+				</select>
+				<div id="sdb_a">
+					地址：<input type="text" name="db_host" value="localhost" /><br />
+					用户名：<input type="text" name="db_user" value="root" /><br />
+					密码：<input type="password" name="db_pass" value="" /><br />
+					数据库名：<input type="text" name="db_name" value="mysql" />
+				</div>
+				<div id="sdb_b" style="display: none;">
+					<font color="red"><div id="warn">
+						要使用SQLite，文件路径必须有读写权限！<br />
+						SQLite数据库性能一般不如MySQL，如果您的服务器安装有MySQL，建议使用MySQL而不是SQLite。<br />
+						为了数据安全，文件路径所在目录不应该能被HTTP访问。<br />
+						文件路径建议填写绝对路径。
+					</div></font>
+					文件路径：<input type="text" name="db_path" value="<?php echo $_SERVER['DOCUMENT_ROOT']; ?>/db.sqlite" size="32" />
+				</div>
 				<input type="submit" name="update" value="确定" />
 			</form>
+			<script type="text/javascript">
+				function db_switch(dbtype) {
+					if (dbtype == "sqlite") {
+						document.getElementById("sdb_a").style.display = "none";
+						document.getElementById("sdb_b").style.display = "block";
+					} else if (dbtype == "mysql") {
+						document.getElementById("sdb_a").style.display = "block";
+						document.getElementById("sdb_b").style.display = "none";
+					} else {alert("错误的参数！")}
+				}
+			</script>
 			<?php
 		}
 		break;
 	case 2:
-		if (!$_SESSION['db_checked']) header('Location: install.php?step=1');
+		if (!connect_db()) header('Location: install.php?step=1');
 		else {
-			foreach ($sqls as $sql) $mysql->query($sql);
+			if ($_SESSION['db_type'] === 'sqlite') {
+				foreach ($sqls_sqlite as $sql) $db->query($sql);
+			} elseif ($_SESSION['db_type'] === 'mysql'){
+				foreach ($sqls_mysql as $sql) $db->query($sql);
+			}
 			?>
 			<p>数据库表已经建立</p>
 			<p><a href="install.php?step=3">下一步</a></p>
@@ -141,7 +229,7 @@ switch ($_REQUEST['step']) {
 		}
 		break;
 	case 3:
-		if (!$_SESSION['db_checked']) header('Location: install.php?step=1');
+		if (!connect_db()) header('Location: install.php?step=1');
 		else {
 			if (isset($_POST['update'])) {
 				if (!isset($_POST['u_name']) or $_POST['u_name'] == '') reportError('用户名不能为空');
@@ -149,7 +237,7 @@ switch ($_REQUEST['step']) {
 				if (!isset($_POST['u_cfim']) or $_POST['u_pass'] !== $_POST['u_cfim']) reportError('两次密码输入不匹配');
 				if (!preg_match('/[0-9a-z]{3,16}/i', $_POST['u_name'])) reportError('用户名必须是3~16位的字母和（或）数字组合');
 				$userhash = md5($_POST['u_name'].time().mt_rand(0, 65535));
-				$mysql->prepare('INSERT INTO `siteusers` VALUES (NULL, ?, ?, ?)')->execute(array($_POST['u_name'], md5($_POST['u_pass']), $userhash));
+				$db->insert('siteusers', array('name' => $_POST['u_name'], 'passwd' => md5($_POST['u_pass']), 'hash' => $userhash));
 				?>
 				<p>已创建用户<?=$_POST['u_name']?>，请牢记您设置的密码！</p>
 				<p>接下来，将储存本程序的配置。</p>
@@ -165,20 +253,24 @@ switch ($_REQUEST['step']) {
 					确认密码：<input type="password" name="u_cfim" value="" /><br />
 					<input type="submit" name="update" value="确定" />
 				</form>
+				<p><a href="install.php?step=4">跳过此步骤</a></p>
 				<?php
 			}
 		}
 		break;
 	case 4:
+		if (!connect_db()) header('Location: install.php?step=1');
 		$jumpath = dirname($_SERVER['PHP_SELF']);
 		if ($jumpath === '/') $jumpath = '';
 		$rc = md5(time().mt_rand(0, 65535));
 		$configFileContent = <<<EOT
 <?php
+\$dbtype = '${_SESSION['db_type']}';
 \$host = '${_SESSION['db_host']}';
 \$user = '${_SESSION['db_user']}';
 \$pass = '${_SESSION['db_pass']}';
 \$db = '${_SESSION['db_name']}';
+\$dbpath = '${_SESSION['db_path']}';
 \$ua='netdisk;4.6.1.0;PC;PC-Windows;6.2.9200;WindowsBaiduYunGuanJia';
 \$jumper = 'http://${_SERVER['HTTP_HOST']}$jumpath/jump.php?';
 \$enable_direct_link = TRUE;
