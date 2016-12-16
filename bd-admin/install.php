@@ -154,7 +154,7 @@ switch ($_REQUEST['step']) {
 		if (isset($_POST['update']) and isset($_POST['db_type'])) {
 			if ($_POST['db_type'] === 'sqlite') {
 				if (!isset($_POST['db_path']) or $_POST['db_path'] === '') reportError('数据库文件路径不能为空');
-				@file_put_contents($_POST['db_path'], '');
+				if (!file_exists($_POST['db_path'])) @file_put_contents($_POST['db_path'], '');
 				if (!is_writable($_POST['db_path'])) reportError('数据库文件路径无写入权限');
 				$_SESSION['db_type'] = 'sqlite';
 				$_SESSION['db_path'] = $_POST['db_path'];
